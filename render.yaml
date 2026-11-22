@@ -1,0 +1,92 @@
+services:
+  - type: web
+    name: vet-tambo-api
+    runtime: docker
+    rootDir: api
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/salud
+    envVars:
+      - key: APP_NAME
+        value: Clinica El Tambo - Proyecto Academico
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: DB_CONNECTION
+        value: mongodb
+      - key: DB_URI
+        sync: false
+      - key: DB_DATABASE
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_CREDENTIALS_B64
+        sync: false
+      - key: ADMIN_FIREBASE_UIDS
+        sync: false
+      - key: SPRING_URL
+        sync: false
+      - key: SPRING_INTERNAL_KEY
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_STORE
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+  - type: web
+    name: vet-tambo-estadisticas
+    runtime: docker
+    rootDir: spring-estadisticas
+    dockerfilePath: ./Dockerfile
+    plan: free
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: DB_DATABASE
+        sync: false
+      - key: SPRING_INTERNAL_KEY
+        sync: false
+  - type: web
+    name: vet-tambo-frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false
+      - key: VITE_FIREBASE_API_KEY
+        sync: false
+      - key: VITE_FIREBASE_AUTH_DOMAIN
+        sync: false
+      - key: VITE_FIREBASE_PROJECT_ID
+        sync: false
+      - key: VITE_FIREBASE_APP_ID
+        sync: false
+      - key: VITE_FIREBASE_MESSAGING_SENDER_ID
+        sync: false
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()

@@ -1,0 +1,37 @@
+# Veterinaria El Tambo — prototipo académico de Programación Web
+
+Prototipo de portal de atención veterinaria con catálogo informativo de productos, reservas de citas, roles administrativos y estadísticas. **No es el sitio oficial de la clínica ni acepta compras en línea.**
+
+## Arquitectura
+
+- `frontend`: React 19, Vite 7, Bootstrap 5, Firebase Authentication (cliente).
+- `api`: Laravel 12, validación, autenticación Firebase ID Token, autorización por UID, servicios de agenda, MongoDB, endpoints del catálogo.
+- `spring-estadisticas`: Spring Boot 3, estadísticas por usuario vía MongoDB protegidas con clave de servicio.
+- `mongodb`: análisis comparativo de consultas.
+- `render.yaml`: configuración de los tres servicios para Render.
+- `.github/workflows/ci.yml`: pruebas Node, compilación React y sintaxis PHP al publicar cambios.
+
+## Dónde empezar
+
+1. Lee **`GUIA_GITHUB_RENDER.md`** antes de configurar cuentas o subir nada.
+2. Configura `api/.env` y `frontend/.env` desde los respectivos `.env.example` sin subirlos al repositorio.
+3. Prueba localmente con `Iniciar-Clinica.ps1` (Windows) o inicia los servicios por separado.
+4. Pruebas: `cd frontend && npm ci && npm test && npm run build`.
+5. Backend: `cd api && composer install && php artisan key:generate && php artisan test`.
+6. Spring: `cd spring-estadisticas && mvn test`.
+7. Ejecuta índices solo sobre una base de pruebas después de comprobar duplicados: `php artisan clinica:indices`.
+8. No uses datos falsos o de clientes reales para pruebas académicas sin permiso.
+
+## Administración
+
+El rol administrador se determina en **Laravel** por la variable privada `ADMIN_FIREBASE_UIDS` con los UID Firebase autorizados separados por comas. No confundir UID con dirección de correo. Quien inicia sesión sin estar en esa lista es cliente. La ruta `/#administracion` también está protegida en el servidor; ocultar la pestaña no es el control de seguridad.
+
+El administrador puede crear, editar y retirar del catálogo público los productos, y gestionar profesionales activos e intervalos semanales de atención. Los productos **no se venden ni se cobran** desde la web.
+
+## Estado de verificación
+
+- **Sí:** revisión de sintaxis PHP y JSX/JavaScript; pruebas de lógica de frontend (13/13) realizadas al preparar el paquete.
+- **Pendiente:** instalación y compilación completa de frontend en este entorno, Composer y PHPUnit, Maven, MongoDB y Firebase reales, carga/concurrencia, despliegue e inspección visual de todas las pantallas.
+- No confundas pruebas locales de sintaxis con integración o certificación de seguridad.
+
+Consulta `MATRIZ_RUBRICA_ENTREGA.md`, `EVIDENCIAS_Y_PRUEBAS.md` y `FUENTES_NEGOCIO.md` para preparar el informe final.
