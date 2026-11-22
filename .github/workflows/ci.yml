@@ -2,6 +2,7 @@ name: Comprobaciones de código
 on:
   push:
   pull_request:
+jobs:
   frontend:
     runs-on: ubuntu-latest
     defaults:
