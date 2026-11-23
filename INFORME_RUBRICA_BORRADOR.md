@@ -91,3 +91,8 @@ Redactar al terminar pruebas. Documentar dificultades reales como rutas Apache e
 - PLAN_SEGURIDAD_Y_PRUEBAS.md
 - COMPARACION_CONSULTAS.md
 - MATRIZ_RUBRICA_ENTREGA.md
+
+
+## Adiciones recientes al sistema
+
+Se añadieron en GitHub autenticación Google con Firebase, recuperación/verificación de correo, filtro de catálogo desde Laravel, agrupación de estadísticas en Spring Boot y mejoras de accesibilidad, rendimiento y SEO. Su funcionamiento en producción requiere evidencias reales según `GUIA_MEJORAS_INTEGRACION.md`. La verificación Search Console es opcional y el sitio sigue identificado como no oficial; no afirmar que sea el sitio oficial de la clínica.
