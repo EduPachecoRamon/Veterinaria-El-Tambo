@@ -111,7 +111,7 @@ class ProductoController extends Controller
             'descripcion' => $p->descripcion,
             'precio' => $p->precio,
             'disponible' => (bool) $p->disponible,
-            'imagenUrl' => $p->imagenUrl,
+            'imagenUrl' => !empty($p->fotoId) ? url('/api/productos/' . $p->getKey() . '/foto') : $p->imagenUrl,
             ...($admin ? ['activo' => (bool) $p->activo] : [])
         ];
     }

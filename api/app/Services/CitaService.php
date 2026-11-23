@@ -220,7 +220,8 @@ class CitaService
             'motivo' => $cita->motivo,
             'fechaHora' => $cita->fechaHoraUtc?->toIso8601String(),
             'veterinarioId' => $cita->veterinarioId ?? null,
-            'estado' => $cita->estado ?? null
+            'estado' => $cita->estado ?? null,
+            'tieneFoto' => !empty($cita->fotoId)
         ];
     }
 }

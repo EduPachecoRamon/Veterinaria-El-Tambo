@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Api\AdminVeterinarioController;
 use App\Http\Controllers\Api\CitaController;
+use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\FotoCitaController;
+use App\Http\Controllers\Api\FotoProductoController;
 use App\Http\Controllers\Api\DisponibilidadController;
 use App\Http\Controllers\Api\EstadisticaController;
 use App\Http\Controllers\Api\ProductoController;
@@ -11,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/salud', fn () => response()->json(['estado' => 'activo', 'servicio' => 'Laravel']));
 Route::middleware('throttle:60,1')->get('/productos', [ProductoController::class, 'index']);
+Route::middleware('throttle:60,1')->get('/productos/{id}/foto', [FotoProductoController::class, 'show']);
 
 Route::middleware(['firebase', 'throttle:60,1'])->group(function () {
     Route::get('/yo', function (Request $request) {
@@ -25,9 +29,16 @@ Route::middleware(['firebase', 'throttle:60,1'])->group(function () {
     Route::get('/veterinarios', [VeterinarioController::class, 'index']);
     Route::get('/veterinarios/{id}/disponibilidad', [DisponibilidadController::class, 'index']);
     Route::get('/estadisticas', [EstadisticaController::class, 'index']);
+    Route::post('/citas/{id}/foto', [FotoCitaController::class, 'store'])->middleware('throttle:10,1');
+    Route::get('/citas/{id}/foto', [FotoCitaController::class, 'show']);
+    Route::delete('/citas/{id}/foto', [FotoCitaController::class, 'destroy']);
 
     Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::get('/resumen', [AdminDashboardController::class, 'resumen']);
+        Route::get('/agenda', [AdminDashboardController::class, 'agenda']);
+        Route::get('/citas/{id}/foto', [FotoCitaController::class, 'showAdmin']);
         Route::get('/productos', [ProductoController::class, 'adminIndex']);
+        Route::post('/productos/{id}/foto', [FotoProductoController::class, 'store'])->middleware('throttle:10,1');
         Route::post('/productos', [ProductoController::class, 'store']);
         Route::put('/productos/{id}', [ProductoController::class, 'update']);
         Route::delete('/productos/{id}', [ProductoController::class, 'destroy']);
