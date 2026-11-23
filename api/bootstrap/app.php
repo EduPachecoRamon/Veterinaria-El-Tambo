@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CabecerasSeguras;
 use App\Http\Middleware\SoloAdministrador;
 use App\Http\Middleware\VerificarFirebase;
 use Illuminate\Foundation\Application;
@@ -11,6 +12,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(web: __DIR__.'/../routes/web.php', api: __DIR__.'/../routes/api.php', commands: __DIR__.'/../routes/console.php', health: '/up')
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias(['firebase' => VerificarFirebase::class, 'admin' => SoloAdministrador::class]);
+        $middleware->api(append: [CabecerasSeguras::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(fn (Request $request) => $request->is('api/*') || $request->expectsJson());
