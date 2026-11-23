@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Api\AdminVeterinarioController;
 use App\Http\Controllers\Api\CitaController;
+use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\FotoCitaController;
 use App\Http\Controllers\Api\DisponibilidadController;
 use App\Http\Controllers\Api\EstadisticaController;
 use App\Http\Controllers\Api\ProductoController;
@@ -25,8 +27,14 @@ Route::middleware(['firebase', 'throttle:60,1'])->group(function () {
     Route::get('/veterinarios', [VeterinarioController::class, 'index']);
     Route::get('/veterinarios/{id}/disponibilidad', [DisponibilidadController::class, 'index']);
     Route::get('/estadisticas', [EstadisticaController::class, 'index']);
+    Route::post('/citas/{id}/foto', [FotoCitaController::class, 'store'])->middleware('throttle:10,1');
+    Route::get('/citas/{id}/foto', [FotoCitaController::class, 'show']);
+    Route::delete('/citas/{id}/foto', [FotoCitaController::class, 'destroy']);
 
     Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::get('/resumen', [AdminDashboardController::class, 'resumen']);
+        Route::get('/agenda', [AdminDashboardController::class, 'agenda']);
+        Route::get('/citas/{id}/foto', [FotoCitaController::class, 'showAdmin']);
         Route::get('/productos', [ProductoController::class, 'adminIndex']);
         Route::post('/productos', [ProductoController::class, 'store']);
         Route::put('/productos/{id}', [ProductoController::class, 'update']);
