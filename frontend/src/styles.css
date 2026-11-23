@@ -24,3 +24,11 @@
 .connection-panel{max-width:690px;margin:20px auto;text-align:center;padding:clamp(26px,5vw,54px);background:#fff;border:1px solid #dbeafe;border-radius:26px;box-shadow:0 24px 58px #0f172a12}
 .connection-icon{width:68px;height:68px;margin:0 auto 18px;border-radius:20px;display:grid;place-items:center;background:#e0f2fe;color:#0369a1}
 .connection-panel h1{font-weight:800;letter-spacing:-.025em}
+
+.hero-disclaimer{display:inline-block;margin-top:15px;padding:9px 12px;border-radius:8px;background:#ffffff15;color:#e2f8f3}
+.steps-section{background:linear-gradient(180deg,#f0f9ff,#f8fafc)}
+.step-card{border:1px solid #dbeafe;background:white;border-radius:20px;padding:30px;box-shadow:0 12px 24px #0f172a0c;transition:transform .16s ease,box-shadow .16s ease}
+.step-number{font-size:1.8rem;font-weight:800;color:#0369a1;letter-spacing:-.05em}
+.step-card h3{font-weight:700}
+@media(hover:hover){.step-card:hover{transform:translateY(-4px);box-shadow:0 20px 30px #0f172a13}}
+@media(max-width:767px){.step-card{padding:24px}.connection-panel{margin:8px auto}}
