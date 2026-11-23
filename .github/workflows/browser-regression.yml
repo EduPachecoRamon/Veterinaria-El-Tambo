@@ -1,0 +1,32 @@
+name: Browser regression - real React rendering
+on:
+  push:
+    branches:
+      - fix/errores-runtime-y-agenda-final
+  workflow_dispatch:
+
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install frontend and browser
+        working-directory: frontend
+        run: |
+          npm ci
+          npm install --no-save --package-lock=false playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Launch Vite and run real browser regression
+        working-directory: frontend
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 4173 > /tmp/vite-browser.log 2>&1 &
+          VITE_PID=$!
+          trap 'kill $VITE_PID || true; tail -35 /tmp/vite-browser.log' EXIT
+          for i in {1..35}; do curl -fsS http://127.0.0.1:4173/browser-fixture.html >/dev/null && break; sleep 1; done
+          node tests/browser-real.mjs
