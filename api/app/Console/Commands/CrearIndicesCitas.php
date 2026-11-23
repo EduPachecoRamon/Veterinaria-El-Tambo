@@ -25,6 +25,8 @@ class CrearIndicesCitas extends Command
                 'partialFilterExpression' => ['estado' => ['$in' => ['confirmada', 'en_curso']]]
             ]);
             $base->selectCollection('productos')->createIndex(['activo' => 1, 'categoria' => 1, 'nombre' => 1], ['name' => 'catalogo_activo_categoria_nombre']);
+            $base->selectCollection('productos')->createIndex(['activo' => 1, 'categoria' => 1, 'disponible' => 1, 'nombre' => 1], ['name' => 'catalogo_disponible_nombre']);
+            $base->selectCollection('productos')->createIndex(['activo' => 1, 'categoria' => 1, 'precio' => 1], ['name' => 'catalogo_categoria_precio']);
             $base->selectCollection('horario_veterinarios')->createIndex(['veterinarioId' => 1, 'diaSemana' => 1], ['name' => 'horario_veterinario_dia', 'unique' => true]);
         } catch (\Throwable $error) {
             $this->error('Falló un índice. Comprueba versión de MongoDB, duplicados y conexión.');
