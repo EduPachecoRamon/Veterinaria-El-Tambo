@@ -24,7 +24,23 @@ for(const screen of ['productos','administracion','agenda']){
  await page.goto('http://127.0.0.1:4173/browser-fixture.html#'+screen,{waitUntil:'networkidle'});
  await page.waitForTimeout(1100);
  const body=(await page.locator('body').innerText()).slice(0,370);
- const broke=body.includes('No se pudo abrir esta sección')||errors.length>0||body.trim().length<30;
+ const looksBroken=()=>page.locator('text=No se pudo abrir esta sección').count();
+ try {
+   if(screen==='productos'){
+     await page.getByRole('button',{name:'Alimentos',exact:true}).click();
+     await page.getByRole('searchbox',{name:'Buscar productos'}).fill('cepillo');
+     await page.waitForTimeout(450);
+   } else if(screen==='administracion'){
+     for(const tab of ['Agenda diaria','Catálogo','Profesionales','Rendimiento','Resumen']){
+       await page.getByRole('button',{name:tab,exact:true}).click();
+       await page.waitForTimeout(120);
+     }
+   } else if(screen==='agenda'){
+     await page.getByRole('button',{name:'Semana siguiente'}).click();
+     await page.waitForTimeout(250);
+   }
+ } catch(e){errors.push('INTERACTION: '+e.stack);}
+ const broke=body.includes('No se pudo abrir esta sección')||errors.length>0||body.trim().length<30||await looksBroken()>0;
  console.log(JSON.stringify({screen,body,errorCount:errors.length,errors:errors.slice(0,3),broke}));
  if(broke)failed++;
  await page.close();

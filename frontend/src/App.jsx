@@ -45,7 +45,7 @@ function Nav({page,setPage,user,rol}){
                 <span className="account-avatar"><UserRound size={18}/></span><span className="account-label">Cuenta</span><ChevronDown size={14}/>
               </button>
               {cuenta&&<div className="account-dropdown" role="menu">
-                <div className="account-identity" title={user.email||''}><small>Sesión activa</small><strong>{user.email||'Usuario autenticado'}</strong></div>
+                <div className="account-identity" title={user.email||''}><small>{rol==='administrador'?'Acceso de personal autorizado':'Sesión activa'}</small><strong>{user.email||'Usuario autenticado'}</strong></div>
                 <a role="menuitem" href="#citas" onClick={()=>elegir('citas')}><ClipboardList size={16}/> Mis reservas</a>
                 <a role="menuitem" href="#agenda" onClick={()=>elegir('agenda')}><Clock3 size={16}/> Consultar horarios</a>
                 <a role="menuitem" href="#estadisticas" onClick={()=>elegir('estadisticas')}><ChartNoAxesColumn size={16}/> Mi actividad</a>
