@@ -21,6 +21,7 @@ return [
         'firebase_credentials_b64' => env('FIREBASE_CREDENTIALS_B64', ''),
         'spring_url' => env('SPRING_URL', ''),
         'spring_internal_key' => env('SPRING_INTERNAL_KEY', ''),
+        'stats_fallback_enabled' => env('STATS_FALLBACK_ENABLED', false),
     ],
 
     'postmark' => [
