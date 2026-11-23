@@ -12,19 +12,27 @@ export default function Catalogo() {
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(true);
   const [busqueda, setBusqueda] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [orden, setOrden] = useState('nombre_asc');
+  const [disponible, setDisponible] = useState('todos');
+
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(busqueda.trim()), 350);
+    return () => clearTimeout(id);
+  }, [busqueda]);
 
   useEffect(() => {
     const controller = new AbortController();
     setCargando(true);
     setError('');
-    api.productos({page: pagina, ...(categoria === 'Todas' ? {} : {categoria})})
+    api.productos({page: pagina, ...(categoria === 'Todas' ? {} : {categoria}), ...(debouncedSearch ? {q: debouncedSearch} : {}), ...(disponible === 'todos' ? {} : {disponible: disponible === 'si' ? 1 : 0}), orden}, {signal: controller.signal})
       .then(r => {if (!controller.signal.aborted) setResultados(r);})
       .catch(e => {if (!controller.signal.aborted) setError(e.message);})
       .finally(() => {if (!controller.signal.aborted) setCargando(false);});
     return () => controller.abort();
-  }, [pagina, categoria]);
+  }, [pagina, categoria, debouncedSearch, orden, disponible]);
 
-  const visibles = (resultados.data || []).filter(p => `${p.nombre} ${p.descripcion}`.toLocaleLowerCase('es-PE').includes(busqueda.toLocaleLowerCase('es-PE')));
+  const visibles = resultados.data || [];
 
   return <main className="container py-5">
     <div className="text-center mb-4">
@@ -33,16 +41,28 @@ export default function Catalogo() {
       <p className="text-muted mx-auto" style={{maxWidth: 720}}>Catálogo informativo. Disponibilidad y precios sujetos a confirmación con la clínica. No se realizan pagos ni compras en esta página.</p>
     </div>
     <div className="panel d-flex flex-wrap align-items-end gap-3 mb-4">
-      <label className="flex-grow-1">Buscar en esta página
-        <input value={busqueda} onChange={e => setBusqueda(e.target.value)} className="form-control mt-1" placeholder="Nombre o descripción"/>
+      <label className="flex-grow-1">Buscar en todos los productos
+        <input value={busqueda} onChange={e => {setBusqueda(e.target.value); setPagina(1);}} className="form-control mt-1" placeholder="Nombre o descripción"/>
       </label>
       <label style={{minWidth: 180}}>Categoría
-        <select className="form-select mt-1" value={categoria} onChange={e => {setCategoria(e.target.value); setPagina(1); setBusqueda('');}}>
+        <select className="form-select mt-1" value={categoria} onChange={e => {setCategoria(e.target.value); setPagina(1);}}>
           {categorias.map(c => <option key={c}>{c}</option>)}
         </select>
       </label>
+      <label style={{minWidth: 170}}>Disponibilidad
+        <select className="form-select mt-1" value={disponible} onChange={e=>{setDisponible(e.target.value);setPagina(1);}}>
+          <option value="todos">Todos</option><option value="si">Disponibles</option><option value="no">No disponibles</option>
+        </select>
+      </label>
+      <label style={{minWidth: 200}}>Ordenar
+        <select className="form-select mt-1" value={orden} onChange={e=>{setOrden(e.target.value);setPagina(1);}}>
+          <option value="nombre_asc">Nombre (A-Z)</option>
+          <option value="precio_asc">Menor precio</option>
+          <option value="precio_desc">Mayor precio</option>
+        </select>
+      </label>
     </div>
-    {cargando && <p role="status">Consultando productos…</p>}
+    {cargando && <p role="status" aria-live="polite">Consultando productos…</p>}
     {error && <div className="alert alert-warning" role="alert">{error} El catálogo requiere conexión con Laravel.</div>}
     {!cargando && !error && <>
       <div className="row g-4">
@@ -60,6 +80,7 @@ export default function Catalogo() {
           </article>
         </div>)}
       </div>
+      <p className="small text-muted mt-3" role="status" aria-live="polite">{resultados.total} productos encontrados en el catálogo.</p>
       {!visibles.length && <div className="text-center py-5"><PackageSearch size={34} className="mb-2 text-muted"/><p>No hay productos publicados que coincidan con tu búsqueda.</p></div>}
       <div className="d-flex align-items-center justify-content-between mt-4 gap-2">
         <span className="small text-muted">Página {pagina} de {Math.max(1, resultados.lastPage)} · {resultados.total} registros</span>

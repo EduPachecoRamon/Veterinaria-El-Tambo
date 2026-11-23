@@ -1,9 +1,10 @@
 import React,{useCallback,useEffect,useState} from 'react';
-import {onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut} from 'firebase/auth';
+import {onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,GoogleAuthProvider,signInWithPopup,sendPasswordResetEmail,sendEmailVerification,reload} from 'firebase/auth';
 import {CalendarDays,ChevronLeft,ChevronRight,ClipboardList,Clock3,HeartPulse,LogIn,LogOut,Menu,ShieldCheck,Stethoscope,Trash2,Pencil,RefreshCcw,ChartNoAxesColumn,CheckCircle2} from 'lucide-react';
 import {auth} from './firebase.js';
 import {api} from './api.js';
 import Catalogo from './Catalogo.jsx';
+import {BarChart} from './EstadisticasVisuales.jsx';
 import Administracion from './Administracion.jsx';
 import {clinica} from './data/clinica.js';
 import {ESPECIES,vacio,validarCamposCita,citaAFormulario,formatearFecha} from './domain/citas.js';
@@ -13,7 +14,99 @@ function Footer(){return <footer className="py-4 text-white bg-footer mt-auto"><
 function Home({setPage}){return <><section className="hero"><div className="container py-5"><div className="row align-items-center gy-4"><div className="col-lg-7"><p className="eyebrow">BIENESTAR ANIMAL · ATENCIÓN VETERINARIA</p><h1>Salud y bienestar para tus mascotas</h1><p className="lead mt-3">Una experiencia más sencilla para conocer nuestros servicios y gestionar tus citas veterinarias desde cualquier dispositivo.</p><div className="d-flex flex-wrap gap-2 mt-4"><a href="#citas" className="btn btn-light btn-lg fw-semibold" onClick={()=>setPage('citas')}>Solicitar una cita <ChevronRight size={18}/></a><a className="btn btn-outline-light btn-lg" href="#productos" onClick={()=>setPage('productos')}>Productos y accesorios</a></div></div><div className="col-lg-5"><img className="img-fluid hero-photo" src={`${import.meta.env.BASE_URL}img/perrolemaAD.jpg`} alt="Mascota atendida por la clínica"/></div></div></div></section><section className="container py-5"><div className="text-center mb-4"><span className="section-kicker">CUIDAMOS LO IMPORTANTE</span><h2 className="section-heading">Atención cercana y organizada</h2></div><div className="row g-4">{[[Stethoscope,'Atención médica','Servicios de salud animal en una sola plataforma.'],[CalendarDays,'Citas en línea','Registra y consulta tus citas desde tu cuenta.'],[ShieldCheck,'Datos personales','Acceso autenticado y separación de registros por usuario.']].map(([Icon,t,d])=><div className="col-md-4" key={t}><article className="feature"><div className="feature-icon"><Icon size={26}/></div><h3 className="h5 mt-3">{t}</h3><p className="text-muted mb-0">{d}</p></article></div>)}</div></section><section className="bg-soft py-5"><div className="container row align-items-center gy-4 mx-auto"><div className="col-md-6"><h2 className="section-heading">Servicios para cada etapa</h2><p>Consulta general, atención felina, prevención y estética veterinaria. Conoce las opciones del proyecto original.</p><a className="btn btn-vet" href="#servicios" onClick={()=>setPage('servicios')}>Ver los servicios</a></div><div className="col-md-6"><img className="img-fluid rounded-4 shadow-sm" src={`${import.meta.env.BASE_URL}img/gatolindoAD2.jpg`} alt="Gato saludable"/></div></div></section></>}
 function Services(){const [term,setTerm]=useState('');const visibles=servicios.filter(([n,d])=>(n+' '+d).toLowerCase().includes(term.toLowerCase()));return <main className="container py-5"><div className="text-center mb-4"><span className="section-kicker">SERVICIOS</span><h1 className="section-heading">Nuestros servicios médicos</h1><p className="text-muted">Servicios descritos con fines académicos: confirma la disponibilidad y condiciones directamente con la clínica.</p></div><div className="search-area"><input className="form-control form-control-lg" aria-label="Buscar servicios" placeholder="Buscar consulta, vacunas, estética..." value={term} onChange={e=>setTerm(e.target.value)}/></div><div className="row g-4 mt-2">{visibles.map(([n,d,img])=><div key={n} className="col-md-6 col-lg-4"><article className="service-card h-100"><img src={`${import.meta.env.BASE_URL}img/${img}`} alt={n}/><div className="p-4"><h2 className="h5">{n}</h2><p className="text-muted mb-0">{d}</p></div></article></div>)}</div>{!visibles.length&&<p className="text-center py-5 text-muted">No encontramos servicios con esa búsqueda.</p>}</main>}
 function Contact(){return <main className="container py-5"><div className="text-center mb-4"><span className="section-kicker">CONTACTO</span><h1 className="section-heading">Estamos para ayudarte</h1><p className="text-muted">Contacto publicado en directorios; confirmar directamente con la clínica antes de usarlo comercialmente.</p></div><div className="row g-4"><div className="col-md-7"><div className="panel h-100"><h2 className="h4">¿Necesitas atención?</h2><p>Consulta nuestros servicios, inicia sesión y registra una cita. El sistema conserva un historial personal en MongoDB mediante la API Laravel.</p><address className="mb-3">{clinica.direccion}</address><div className="d-flex gap-2 flex-wrap"><a className="btn btn-vet" href={`tel:${clinica.telefono}`}>Llamar {clinica.telefonoVisible}</a><a className="btn btn-outline-vet" href={clinica.facebook} target="_blank" rel="noopener noreferrer">Facebook</a><a className="btn btn-outline-secondary" href={clinica.maps} target="_blank" rel="noopener noreferrer">Cómo llegar</a></div><p className="small text-muted mt-3 mb-0">Datos provenientes de directorios públicos. Este portal es una demostración universitaria y no constituye el canal oficial de reservas ni ventas de la clínica.</p></div></div><div className="col-md-5"><img src={`${import.meta.env.BASE_URL}img/perroAD.jpg`} className="img-fluid rounded-4 shadow-sm" alt="Perro en atención veterinaria"/></div></div></main>}
-function AuthPanel({setError}){const [mail,setMail]=useState(''),[pass,setPass]=useState(''),[busy,setBusy]=useState(false);async function submit(register){setBusy(true);setError('');try{if(register)await createUserWithEmailAndPassword(auth,mail,pass);else await signInWithEmailAndPassword(auth,mail,pass);setPass('');}catch(e){setError(({ 'auth/email-already-in-use':'Ese correo ya está registrado.','auth/invalid-credential':'Correo o contraseña incorrectos.','auth/weak-password':'La contraseña es muy corta.'})[e.code]||e.message);}finally{setBusy(false)}}return <div className="panel mx-auto auth-panel"><h2 className="h4">Accede a tus citas</h2><p className="text-muted">Autenticación con Firebase · Tus citas se guardan en MongoDB.</p><form onSubmit={e=>{e.preventDefault();submit(false)}}><label className="form-label" htmlFor="email">Correo electrónico</label><input id="email" className="form-control mb-3" type="email" autoComplete="email" required value={mail} onChange={e=>setMail(e.target.value)}/><label className="form-label" htmlFor="clave">Contraseña</label><input id="clave" className="form-control mb-3" type="password" autoComplete="current-password" minLength="6" required value={pass} onChange={e=>setPass(e.target.value)}/><div className="d-flex gap-2 flex-wrap"><button disabled={busy} className="btn btn-vet" type="submit"><LogIn size={17}/> Entrar</button><button disabled={busy} type="button" onClick={()=>submit(true)} className="btn btn-outline-vet">Crear cuenta</button></div></form></div>}
+function AuthPanel({setError}){
+  const [mail,setMail]=useState('');
+  const [pass,setPass]=useState('');
+  const [busy,setBusy]=useState(false);
+  const [notice,setNotice]=useState('');
+  const errors={
+    'auth/email-already-in-use':'Este correo ya tiene una cuenta.',
+    'auth/invalid-credential':'Correo o contraseña incorrectos.',
+    'auth/weak-password':'La contraseña es demasiado corta.',
+    'auth/invalid-email':'Ingresa un correo válido.',
+    'auth/popup-blocked':'El navegador bloqueó la ventana emergente. Permite ventanas de este sitio.',
+    'auth/popup-closed-by-user':'Se cerró la ventana antes de iniciar sesión.',
+    'auth/unauthorized-domain':'Autoriza este dominio en Firebase Authentication → Configuración.',
+    'auth/operation-not-allowed':'Este método de ingreso no está habilitado en Firebase.'
+  };
+  async function run(task){
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try{await task();}
+    catch(e){setError(errors[e.code]||'No se pudo completar la operación. Inténtalo nuevamente.');}
+    finally{setBusy(false);}
+  }
+  function submit(register){
+    return run(async()=>{
+      if(register){
+        const result=await createUserWithEmailAndPassword(auth,mail.trim(),pass);
+        try{
+          await sendEmailVerification(result.user);
+          setNotice('Cuenta creada. Revisa tu correo para verificarla.');
+        }catch{
+          setNotice('Cuenta creada. Puedes solicitar la verificación desde tu sesión.');
+        }
+      }else{
+        await signInWithEmailAndPassword(auth,mail.trim(),pass);
+      }
+      setPass('');
+    });
+  }
+  function google(){
+    return run(async()=>{
+      const provider=new GoogleAuthProvider();
+      provider.setCustomParameters({prompt:'select_account'});
+      await signInWithPopup(auth,provider);
+    });
+  }
+  function recover(){
+    if(!mail.trim()){setError('Escribe tu correo para recuperar el acceso.');return;}
+    return run(async()=>{
+      await sendPasswordResetEmail(auth,mail.trim());
+      setNotice('Si existe una cuenta para ese correo, recibirás instrucciones para recuperar el acceso.');
+    });
+  }
+  return <div className="panel mx-auto auth-panel">
+    <h2 className="h4">Accede a tus citas</h2>
+    <p className="text-muted">Autenticación protegida con Firebase · Historial personal de reservas.</p>
+    {notice&&<p className="alert alert-info" role="status">{notice}</p>}
+    <form onSubmit={e=>{e.preventDefault();submit(false)}}>
+      <label className="form-label" htmlFor="email">Correo electrónico</label>
+      <input id="email" className="form-control mb-3" type="email" autoComplete="email" required value={mail} onChange={e=>setMail(e.target.value)}/>
+      <label className="form-label" htmlFor="clave">Contraseña</label>
+      <input id="clave" className="form-control mb-3" type="password" autoComplete="current-password" minLength="6" required value={pass} onChange={e=>setPass(e.target.value)}/>
+      <div className="d-flex gap-2 flex-wrap">
+        <button disabled={busy} className="btn btn-vet" type="submit"><LogIn size={17}/> Entrar</button>
+        <button disabled={busy} type="button" onClick={()=>submit(true)} className="btn btn-outline-vet">Crear cuenta</button>
+      </div>
+    </form>
+    <button className="btn btn-link px-0 mt-2" type="button" disabled={busy} onClick={recover}>¿Olvidaste tu contraseña?</button>
+    <div className="auth-divider" aria-hidden="true">o</div>
+    <button className="btn btn-google w-100" type="button" disabled={busy} onClick={google}>
+      <span className="google-symbol" aria-hidden="true">G</span>
+      Continuar con Google
+    </button>
+  </div>;
+}
+
+function VerificarCorreo({user}){
+  const [message,setMessage]=useState('');
+  const [busy,setBusy]=useState(false);
+  async function execute(task){
+    setBusy(true);
+    try{await task();}catch{setMessage('No se pudo consultar el estado. Intenta nuevamente.');}
+    finally{setBusy(false);}
+  }
+  return <div className="alert alert-warning" role="status">
+    <strong>Correo sin verificar.</strong> Revisa tu bandeja de entrada para confirmar la dirección de tu cuenta.
+    <div className="d-flex flex-wrap gap-2 mt-2">
+      <button type="button" className="btn btn-sm btn-outline-dark" disabled={busy} onClick={()=>execute(async()=>{await sendEmailVerification(user);setMessage('Mensaje de verificación enviado.');})}>Reenviar verificación</button>
+      <button type="button" className="btn btn-sm btn-outline-dark" disabled={busy} onClick={()=>execute(async()=>{await reload(user);setMessage(user.emailVerified?'Correo confirmado.':'Aún no se ha confirmado el correo.');})}>Comprobar estado</button>
+    </div>
+    {message&&<p className="small mt-2 mb-0">{message}</p>}
+  </div>;
+}
 
 function Citas({user}) {
   const [form,setForm] = useState({...vacio,veterinarioId:''});
@@ -180,6 +273,7 @@ function Citas({user}) {
           onClick={()=>signOut(auth)}>Cerrar sesión</button>
       </div>
 
+      {!user.emailVerified&&user.providerData?.some(p=>p.providerId==='password')&&<VerificarCorreo user={user}/>}
       <div className="row g-4">
         <div className="col-lg-5">
           <div className="panel h-100">
@@ -338,7 +432,47 @@ function Citas({user}) {
     </>}
   </main>;
 }
-function Stats({user}){const [data,setData]=useState(null),[error,setError]=useState(''),[loading,setLoading]=useState(false);async function load(){setLoading(true);setError('');try{setData(await api.estadisticas());}catch(e){setError(e.message);}finally{setLoading(false)}}useEffect(()=>{if(user)load()},[user]);return <main className="container py-5"><div className="text-center mb-4"><span className="section-kicker">SPRING BOOT + MONGODB</span><h1 className="section-heading">Estadísticas de mis citas</h1></div>{!user?<AuthPanel setError={setError}/>:<div className="panel"><div className="d-flex justify-content-between align-items-center"><h2 className="h4">Resumen</h2><button onClick={load} disabled={loading} className="btn btn-outline-vet btn-sm"><RefreshCcw size={16}/> Actualizar</button></div>{error&&<p role="alert" className="alert alert-danger">{error}</p>}{data?.disponible===false&&<p className="alert alert-warning">{data.mensaje||'El servicio Spring no está disponible.'}</p>}{data?.disponible&&<><div className="stats-number">{data.total}</div><p>Citas registradas por tu cuenta</p><div className="row g-3">{(data.porEspecie||[]).map(s=><div className="col-sm-4" key={s.especie}><div className="feature"><strong>{s.cantidad}</strong><p className="mb-0 text-muted">{s.especie}</p></div></div>)}</div></>}{!data&&!loading&&<p>Solicita las estadísticas del servicio.</p>}</div>}</main>}
+function Stats({user}){
+  const [data,setData]=useState(null);
+  const [error,setError]=useState('');
+  const [loading,setLoading]=useState(false);
+  async function load(){
+    setLoading(true);
+    setError('');
+    try{setData(await api.estadisticas());}
+    catch(e){setError(e.message);}
+    finally{setLoading(false);}
+  }
+  useEffect(()=>{if(user)load();},[user]);
+  return <main className="container py-5">
+    <div className="text-center mb-4">
+      <span className="section-kicker">SPRING BOOT + MONGODB</span>
+      <h1 className="section-heading">Estadísticas de mis citas</h1>
+      <p className="text-muted">Indicadores calculados a partir de las reservas de tu cuenta.</p>
+    </div>
+    {!user?<AuthPanel setError={setError}/>:<div className="panel">
+      <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 className="h4">Resumen de actividad</h2>
+        <button onClick={load} disabled={loading} className="btn btn-outline-vet btn-sm">
+          <RefreshCcw size={16}/> Actualizar
+        </button>
+      </div>
+      {loading&&<p role="status" aria-live="polite">Calculando estadísticas…</p>}
+      {error&&<p role="alert" className="alert alert-danger">{error}</p>}
+      {data?.disponible===false&&<p className="alert alert-warning">{data.mensaje||'El servicio Spring no está disponible.'}</p>}
+      {data?.disponible&&<div aria-live="polite">
+        <div className="stats-number">{data.total}</div>
+        <p>Citas registradas por tu cuenta</p>
+        <div className="row g-4">
+          <div className="col-lg-4"><BarChart title="Por especie" entries={data.porEspecie||[]} labelKey="especie"/></div>
+          <div className="col-lg-4"><BarChart title="Por estado" entries={data.porEstado||[]} labelKey="estado"/></div>
+          <div className="col-lg-4"><BarChart title="Por mes" entries={data.porMes||[]} labelKey="mes"/></div>
+        </div>
+      </div>}
+      {!data&&!loading&&!error&&<p>Solicita las estadísticas del servicio.</p>}
+    </div>}
+  </main>;
+}
 export default function App(){
   const [page,setPage]=useState(location.hash.slice(1)||'inicio');
   const [user,setUser]=useState(undefined);
@@ -355,8 +489,9 @@ export default function App(){
     addEventListener('hashchange',onHash);
     return()=>removeEventListener('hashchange',onHash);
   },[]);
-  return <div className="app">
+  return <div className="app"><a className="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
     <Nav page={page} setPage={setPage} user={user} rol={rol}/>
+    <div id="contenido-principal" tabIndex="-1" className="page-content">
     {page==='servicios'?<Services/>:
       page==='productos'?<Catalogo/>:
       page==='citas'?<Citas user={user}/>:
@@ -364,6 +499,7 @@ export default function App(){
       page==='estadisticas'?<Stats user={user}/>:
       page==='administracion'?<Administracion rol={rol}/>:
       <Home setPage={setPage}/>}
+    </div>
     <Footer/>
   </div>;
 }

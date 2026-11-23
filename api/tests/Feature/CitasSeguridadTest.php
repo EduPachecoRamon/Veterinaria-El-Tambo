@@ -56,4 +56,15 @@ class CitasSeguridadTest extends TestCase
             'imagenUrl' => 'http://example.com/imagen.jpg'
         ])->assertUnprocessable()->assertJsonValidationErrors(['precio', 'imagenUrl']);
     }
+    public function test_rechaza_filtros_inseguros_del_catalogo_sin_consultar_la_base(): void
+    {
+        $this->getJson('/api/productos?q='.str_repeat('a', 81))->assertUnprocessable()
+            ->assertJsonValidationErrors(['q']);
+
+        $this->getJson('/api/productos?orden=inexistente')->assertUnprocessable()
+            ->assertJsonValidationErrors(['orden']);
+
+        $this->getJson('/api/productos?categoria=Medicamentos')->assertUnprocessable()
+            ->assertJsonValidationErrors(['categoria']);
+    }
 }

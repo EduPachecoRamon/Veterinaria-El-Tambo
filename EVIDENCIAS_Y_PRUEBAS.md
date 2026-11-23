@@ -20,6 +20,13 @@ Los siguientes datos deben completarse **al ejecutar el proyecto**; no son resul
 | D-01 | Backend accesible por HTTPS | API disponible | Pendiente | URL + SSL Labs |
 | D-02 | Cabeceras del sitio público | Resultado medido | Pendiente | MDN Observatory |
 | D-03 | Vista escritorio, tableta y móvil | Navegación y controles accesibles | Pendiente | 3 capturas |
+| A-01 | Ingreso con Google Firebase | Sesión y UID válidos en Laravel | Pendiente | React + Firebase + API |
+| A-02 | Restablecimiento de contraseña | Correo enviado por Firebase | Pendiente | Captura sin datos privados |
+| A-03 | Verificación de correo | Cuenta verificada tras enlace | Pendiente | Captura Firebase |
+| C-01 | Búsqueda de productos por texto | Resultados filtrados en MongoDB y página correcta | Pendiente | UI + API |
+| C-02 | Filtro por disponibilidad y precio | Orden correcto y paginación coherente | Pendiente | UI + API |
+| E-01 | Estadísticas de especie, estado y mes | Agregaciones limitadas al UID | Pendiente | Spring + UI |
+| SEO-01 | Verificación Search Console | Propiedad verificada | Pendiente | Search Console |
 
 ## Comparación MongoDB
 

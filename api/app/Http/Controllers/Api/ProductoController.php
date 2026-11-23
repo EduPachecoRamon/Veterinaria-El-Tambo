@@ -10,14 +10,41 @@ class ProductoController extends Controller
 {
     public function index(Request $request)
     {
-        $datos = $request->validate(['categoria' => 'sometimes|string|max:50', 'page' => 'sometimes|integer|min:1|max:10000']);
+        $datos = $request->validate([
+            'categoria' => 'sometimes|in:Alimentos,Accesorios,Higiene,Otros',
+            'q' => 'sometimes|string|max:80',
+            'disponible' => 'sometimes|boolean',
+            'orden' => 'sometimes|in:nombre_asc,precio_asc,precio_desc',
+            'page' => 'sometimes|integer|min:1|max:10000'
+        ]);
         $consulta = Producto::query()->where('activo', true);
 
         if (!empty($datos['categoria'])) {
             $consulta->where('categoria', $datos['categoria']);
         }
 
-        $resultado = $consulta->orderBy('nombre')->paginate(12, ['*'], 'page', (int) ($datos['page'] ?? 1));
+        if (array_key_exists('disponible', $datos)) {
+            $consulta->where('disponible', (bool) $datos['disponible']);
+        }
+
+        if (!empty($datos['q'])) {
+            $patron = new \MongoDB\BSON\Regex(preg_quote(trim($datos['q']), '/'), 'i');
+            $consulta->where(function ($query) use ($patron) {
+                $query->where('nombre', 'regex', $patron)
+                    ->orWhere('descripcion', 'regex', $patron);
+            });
+        }
+
+        $orden = $datos['orden'] ?? 'nombre_asc';
+        if ($orden === 'precio_asc') {
+            $consulta->orderBy('precio')->orderBy('nombre');
+        } elseif ($orden === 'precio_desc') {
+            $consulta->orderBy('precio', 'desc')->orderBy('nombre');
+        } else {
+            $consulta->orderBy('nombre')->orderBy('_id');
+        }
+
+        $resultado = $consulta->paginate(12, ['*'], 'page', (int) ($datos['page'] ?? 1));
 
         return response()->json([
             'data' => $resultado->getCollection()->map(fn (Producto $p) => $this->mostrar($p))->values(),

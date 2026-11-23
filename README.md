@@ -28,6 +28,16 @@ El rol administrador se determina en **Laravel** por la variable privada `ADMIN_
 
 El administrador puede crear, editar y retirar del catálogo público los productos, y gestionar profesionales activos e intervalos semanales de atención. Los productos **no se venden ni se cobran** desde la web.
 
+## Funcionalidades ampliadas
+
+- Google OAuth con Firebase, recuperación de contraseña y verificación de correo desde el frontend.
+- Catálogo con filtros en Laravel/MongoDB, ordenación de precio, disponibilidad y búsqueda por texto en toda la colección.
+- Estadísticas por especie, estado y mes desde Spring Boot.
+- Navegación accesible, mejoras responsivas y metadatos SEO de prototipo no oficial.
+- Validación avanzada del catálogo, scripts de diagnóstico y pruebas automatizadas.
+
+Ver `GUIA_MEJORAS_INTEGRACION.md` y `GUIA_GOOGLE_SEARCH_CONSOLE.md` antes de activar verificación de Google.
+
 ## Estado de verificación
 
 - **Sí:** revisión de sintaxis PHP y JSX/JavaScript; pruebas de lógica de frontend (13/13) realizadas al preparar el paquete.

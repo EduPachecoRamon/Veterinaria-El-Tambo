@@ -41,7 +41,7 @@ export const api = {
   veterinarios: () => request('/veterinarios'),
   disponibilidad: (id, fecha) => request(`/veterinarios/${encodeURIComponent(id)}/disponibilidad?fecha=${encodeURIComponent(fecha)}`),
   estadisticas: () => request('/estadisticas'),
-  productos: (params = {}) => request(`/productos?${new URLSearchParams(params)}`, {publico: true}),
+  productos: (params = {}, options = {}) => request(`/productos?${new URLSearchParams(params)}`, {publico: true, ...options}),
   adminProductos: () => request('/admin/productos'),
   adminCrearProducto: data => request('/admin/productos', {method: 'POST', body: data}),
   adminEditarProducto: (id, data) => request(`/admin/productos/${encodeURIComponent(id)}`, {method: 'PUT', body: data}),
