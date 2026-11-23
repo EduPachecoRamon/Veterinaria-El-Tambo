@@ -44,6 +44,27 @@ export async function request(path, {method = 'GET', body, signal, publico = fal
   return data;
 }
 
+
+async function solicitudArchivo(path,{method='GET',file}={}){
+  const user=auth.currentUser;
+  if(!user)throw new ApiError('Debes iniciar sesión para acceder a las imágenes.',401);
+  const headers={Authorization:`Bearer ${await user.getIdToken()}`};
+  let body;
+  if(file){
+    body=new FormData();
+    body.append('foto',file);
+  }
+  let response;
+  try{response=await fetch(`${BASE}${path}`,{method,headers,body});}
+  catch{throw new ApiError('No se pudo conectar con el almacenamiento de fotografías.',0);}
+  if(!response.ok){
+    const data=await response.json().catch(()=>({}));
+    throw new ApiError(data.message||'No se pudo procesar la fotografía.',response.status);
+  }
+  if(method==='GET')return response.blob();
+  return response.json();
+}
+
 export const api = {
   salud: () => request('/salud', {publico: true}),
   yo: () => request('/yo'),
@@ -54,6 +75,13 @@ export const api = {
   veterinarios: () => request('/veterinarios'),
   disponibilidad: (id, fecha) => request(`/veterinarios/${encodeURIComponent(id)}/disponibilidad?fecha=${encodeURIComponent(fecha)}`),
   estadisticas: () => request('/estadisticas'),
+  adminResumen: () => request('/admin/resumen'),
+  adminAgenda: fecha => request(`/admin/agenda?fecha=${encodeURIComponent(fecha)}`),
+  subirFoto: (id,file) => solicitudArchivo(`/citas/${encodeURIComponent(id)}/foto`,{method:'POST',file}),
+  verFoto: id => solicitudArchivo(`/citas/${encodeURIComponent(id)}/foto`),
+  eliminarFoto: id => request(`/citas/${encodeURIComponent(id)}/foto`,{method:'DELETE'}),
+  adminVerFoto: id => solicitudArchivo(`/admin/citas/${encodeURIComponent(id)}/foto`),
+  adminSubirFotoProducto: (id,file) => solicitudArchivo(`/admin/productos/${encodeURIComponent(id)}/foto`,{method:'POST',file}),
   productos: (params = {}, options = {}) => request(`/productos?${new URLSearchParams(params)}`, {publico: true, ...options}),
   adminProductos: () => request('/admin/productos'),
   adminCrearProducto: data => request('/admin/productos', {method: 'POST', body: data}),
