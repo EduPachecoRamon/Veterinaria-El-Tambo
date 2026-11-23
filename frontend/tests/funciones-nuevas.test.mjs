@@ -34,7 +34,7 @@ test('el panel del personal separa reportes de las citas personales',()=>{
 });
 test('la agenda contiene turnos de hora y no inventa su disponibilidad',()=>{
   assert.match(agenda,/api\.disponibilidad/);
-  assert.match(agenda,/t\.disponible/);
+  assert.match(agenda,/t\?\.disponible/);
   assert.match(agenda,/setReintentos/);
 });
 test('el catalogo contiene referencias y categorias seguras',()=>{
