@@ -16,8 +16,8 @@ Los siguientes datos deben completarse **al ejecutar el proyecto**; no son resul
 | S-03 | Cliente A intenta consultar/editar cita de B | Sin acceso a datos de B | Pendiente | Dos cuentas de prueba |
 | S-04 | Campos inválidos en formulario | HTTP 422, sin guardar | Pendiente | API |
 | S-05 | HTML ingresado como texto | Se presenta como texto, sin ejecutarse | Pendiente | UI + API |
-| P-01 | Consulta por `ownerUid` sin índice | Registrar keys/docs/ms | Pendiente | mongosh `explain` |
-| P-02 | Misma consulta con índice compuesto | Registrar keys/docs/ms | Pendiente | mongosh `explain` |
+| P-01 | Consulta por `ownerUid` sin índice | Registrar keys/docs/ms | Medido: 1500 docs, 0 keys, 1 ms mediana (7 ejecuciones) | `CRITERIO5_RESULTADOS_REALES.md` |
+| P-02 | Misma consulta con índice compuesto | Registrar keys/docs/ms | Medido: 10 docs, 10 keys, 0 ms mediana (7 ejecuciones) | `CRITERIO5_RESULTADOS_REALES.md` |
 | D-01 | Backend accesible por HTTPS | API disponible | Pendiente | URL + SSL Labs |
 | D-02 | Cabeceras del sitio público | Resultado medido | Pendiente | MDN Observatory |
 | D-03 | Vista escritorio, tableta y móvil | Navegación y controles accesibles | Pendiente | 3 capturas |
@@ -35,8 +35,8 @@ Utiliza `mongodb/analizar_consultas.mongosh.js` en **base de prueba**, con el mi
 
 | Variante | Registros de prueba | `totalDocsExamined` | `totalKeysExamined` | Tiempo de ejecución | Plan |
 |---|---:|---:|---:|---:|---|
-| Sin índice | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente |
-| Con índice | Pendiente | Pendiente | Pendiente | Pendiente | Pendiente |
+| Sin índice | 1500 | 1500 | 0 | mediana 1 ms | COLLSCAN + SORT |
+| Con índice | 1500 | 10 | 10 | mediana 0 ms | IXSCAN + FETCH + LIMIT |
 
 ## Responsabilidades del grupo
 

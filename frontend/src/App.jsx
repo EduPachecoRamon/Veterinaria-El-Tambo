@@ -10,8 +10,59 @@ import Administracion from './Administracion.jsx';
 import {clinica} from './data/clinica.js';
 import {ESPECIES,vacio,validarCamposCita,citaAFormulario,formatearFecha} from './domain/citas.js';
 const servicios=[['Consulta General','Evaluación física, diagnóstico y atención preventiva.','veterinaria.png'],['Vacunas y Desparasitación','Programas preventivos para perros y gatos.','vacunacion.jpg'],['Medicina Felina','Atención especializada y manejo de bajo estrés.','medicinafelina.jpg'],['Grooming y Estética','Higiene, baño y cuidado del pelaje.','groomingdoggo.jpg'],['Cirugía y Esterilización','Procedimientos clínicos y cuidados postoperatorios.','esterilizacionmasive.jpg'],['Farmacia Veterinaria','Productos veterinarios según indicación profesional.','logocool2.jpg']];
-function Nav({page,setPage,user,rol}){return <><div className="top-strip"><div className="container d-flex justify-content-between"><span>Portal universitario de demostración · Huancayo</span><span>Consultas y reservas de prueba · No es un canal oficial</span></div></div><nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top"><div className="container"><a className="navbar-brand d-flex align-items-center fw-bold" href="#inicio" onClick={()=>setPage('inicio')}><img src={`${import.meta.env.BASE_URL}img/logocool.jpg`} className="rounded-circle me-2 brand-image" alt="Logo de la clínica"/>Vet El Tambo</a><button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navVet" aria-controls="navVet" aria-expanded="false" aria-label="Abrir menú"><Menu size={22}/></button><div className="collapse navbar-collapse" id="navVet"><div className="navbar-nav ms-auto gap-lg-2">{[['inicio','Inicio'],['servicios','Servicios'],['productos','Productos'],['citas','Citas'],['contacto','Contacto'],...(user?[['estadisticas','Estadísticas']]:[]),...(rol==='administrador'?[['administracion','Administración']]:[])].map(([id,label])=><a key={id} href={`#${id}`} className={`nav-link ${page===id?'active':''}`} aria-current={page===id?'page':undefined} onClick={()=>setPage(id)}>{label}</a>)}<a href="#citas" onClick={()=>setPage('citas')} className="btn btn-vet btn-sm align-self-lg-center ms-lg-2">{user?'Mis citas':'Ingresar'}</a></div></div></div></nav></>}
-function Footer(){return <footer className="py-4 text-white bg-footer mt-auto"><div className="container d-flex justify-content-between align-items-center flex-wrap gap-3"><div><strong>Clínica Veterinaria El Tambo</strong><p className="mb-0 opacity-75 small">Proyecto académico no oficial · Datos sujetos a confirmación · 2026</p></div><img src={`${import.meta.env.BASE_URL}img/logocool2.jpg`} className="rounded-circle footer-logo" alt="Logo de la clínica"/></div></footer>}
+function Nav({page,setPage,user,rol}){
+  const [open,setOpen]=useState(false);
+  useEffect(()=>setOpen(false),[page]);
+  const links=[
+    ['inicio','Inicio'],
+    ['servicios','Servicios'],
+    ['productos','Productos'],
+    ['citas','Citas'],
+    ['contacto','Contacto'],
+    ...(user?[['estadisticas','Estadísticas']]:[]),
+    ...(rol==='administrador'?[['administracion','Administración']]:[])
+  ];
+  const elegir=id=>{setPage(id);setOpen(false);};
+  return <>
+    <div className="top-strip">
+      <div className="container top-strip-inner">
+        <span>Portal académico de demostración · Huancayo</span>
+        <span>Sin reservas ni ventas oficiales</span>
+      </div>
+    </div>
+    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top" aria-label="Navegación principal">
+      <div className="container">
+        <a className="navbar-brand d-flex align-items-center fw-bold" href="#inicio" onClick={()=>elegir('inicio')}>
+          <img src={`${import.meta.env.BASE_URL}img/logocool.jpg`} className="rounded-circle me-2 brand-image" alt="Imagen del proyecto"/>
+          <span>Vet El Tambo</span>
+        </a>
+        <button className="navbar-toggler" type="button" onClick={()=>setOpen(v=>!v)} aria-controls="navVet" aria-expanded={open} aria-label={open?'Cerrar menú':'Abrir menú'}>
+          <Menu size={22}/>
+        </button>
+        <div className={`collapse navbar-collapse ${open?'show':''}`} id="navVet">
+          <div className="navbar-nav ms-auto gap-lg-2">
+            {links.map(([id,label])=><a key={id} href={`#${id}`} className={`nav-link ${page===id?'active':''}`} aria-current={page===id?'page':undefined} onClick={()=>elegir(id)}>{label}</a>)}
+            <a href="#citas" onClick={()=>elegir('citas')} className="btn btn-vet btn-sm align-self-lg-center ms-lg-2">{user?'Mis citas':'Ingresar'}</a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </>;
+}
+function Footer(){
+  return <footer className="py-4 text-white bg-footer mt-auto">
+    <div className="container footer-grid">
+      <div>
+        <strong className="footer-title">Veterinaria El Tambo · Prototipo universitario</strong>
+        <p className="mb-1 opacity-75 small">Proyecto académico no oficial. Las reservas, productos, precios y horarios son demostrativos o están sujetos a confirmación.</p>
+        <p className="small opacity-75 mb-0">React · Firebase · Laravel · Spring Boot · MongoDB Atlas</p>
+      </div>
+      <nav className="footer-links" aria-label="Enlaces del pie">
+        <a href="#servicios">Servicios</a><a href="#productos">Catálogo</a><a href="#citas">Citas</a><a href="#contacto">Contacto</a>
+      </nav>
+    </div>
+  </footer>;
+}
 function PasosReserva({setPage}){
   const pasos=[
     {numero:'01',titulo:'Explora nuestros servicios',texto:'Conoce las áreas de atención descritas en el portal.'},
@@ -39,8 +90,28 @@ function PasosReserva({setPage}){
   </section>;
 }
 function Home({setPage}){return <><section className="hero"><div className="container py-5"><div className="row align-items-center gy-4"><div className="col-lg-7"><p className="eyebrow">PROYECTO ACADÉMICO · CUIDADO ANIMAL</p><h1>Salud y bienestar para tus mascotas</h1><p className="lead mt-3">Explora servicios, consulta productos para mascotas y prueba una agenda digital con acceso seguro desde cualquier dispositivo.</p><p className="small hero-disclaimer">Demostración universitaria independiente. No reemplaza la atención ni las reservas oficiales de la clínica.</p><div className="d-flex flex-wrap gap-2 mt-4"><a href="#citas" className="btn btn-light btn-lg fw-semibold" onClick={()=>setPage('citas')}>Solicitar una cita <ChevronRight size={18}/></a><a className="btn btn-outline-light btn-lg" href="#productos" onClick={()=>setPage('productos')}>Productos y accesorios</a></div></div><div className="col-lg-5"><img className="img-fluid hero-photo" src={`${import.meta.env.BASE_URL}img/perrolemaAD.jpg`} alt="Mascota atendida por la clínica"/></div></div></div></section><section className="container py-5"><div className="text-center mb-4"><span className="section-kicker">CUIDAMOS LO IMPORTANTE</span><h2 className="section-heading">Atención cercana y organizada</h2></div><div className="row g-4">{[[Stethoscope,'Atención médica','Servicios de salud animal en una sola plataforma.'],[CalendarDays,'Citas en línea','Registra y consulta tus citas desde tu cuenta.'],[ShieldCheck,'Datos personales','Acceso autenticado y separación de registros por usuario.']].map(([Icon,t,d])=><div className="col-md-4" key={t}><article className="feature"><div className="feature-icon"><Icon size={26}/></div><h3 className="h5 mt-3">{t}</h3><p className="text-muted mb-0">{d}</p></article></div>)}</div></section><section className="bg-soft py-5"><div className="container row align-items-center gy-4 mx-auto"><div className="col-md-6"><h2 className="section-heading">Servicios para cada etapa</h2><p>Consulta general, atención felina, prevención y estética veterinaria. Conoce las opciones del proyecto original.</p><a className="btn btn-vet" href="#servicios" onClick={()=>setPage('servicios')}>Ver los servicios</a></div><div className="col-md-6"><img className="img-fluid rounded-4 shadow-sm" src={`${import.meta.env.BASE_URL}img/gatolindoAD2.jpg`} alt="Gato saludable"/></div></div></section><PasosReserva setPage={setPage}/></>}
-function Services(){const [term,setTerm]=useState('');const visibles=servicios.filter(([n,d])=>(n+' '+d).toLowerCase().includes(term.toLowerCase()));return <main className="container py-5"><div className="text-center mb-4"><span className="section-kicker">SERVICIOS</span><h1 className="section-heading">Nuestros servicios médicos</h1><p className="text-muted">Servicios descritos con fines académicos: confirma la disponibilidad y condiciones directamente con la clínica.</p></div><div className="search-area"><input className="form-control form-control-lg" aria-label="Buscar servicios" placeholder="Buscar consulta, vacunas, estética..." value={term} onChange={e=>setTerm(e.target.value)}/></div><div className="row g-4 mt-2">{visibles.map(([n,d,img])=><div key={n} className="col-md-6 col-lg-4"><article className="service-card h-100"><img src={`${import.meta.env.BASE_URL}img/${img}`} alt={n}/><div className="p-4"><h2 className="h5">{n}</h2><p className="text-muted mb-0">{d}</p></div></article></div>)}</div>{!visibles.length&&<p className="text-center py-5 text-muted">No encontramos servicios con esa búsqueda.</p>}</main>}
-function Contact(){return <main className="container py-5"><div className="text-center mb-4"><span className="section-kicker">CONTACTO</span><h1 className="section-heading">Estamos para ayudarte</h1><p className="text-muted">Contacto publicado en directorios; confirmar directamente con la clínica antes de usarlo comercialmente.</p></div><div className="row g-4"><div className="col-md-7"><div className="panel h-100"><h2 className="h4">¿Necesitas atención?</h2><p>Consulta nuestros servicios, inicia sesión y registra una cita. El sistema conserva un historial personal en MongoDB mediante la API Laravel.</p><address className="mb-3">{clinica.direccion}</address><div className="d-flex gap-2 flex-wrap"><a className="btn btn-vet" href={`tel:${clinica.telefono}`}>Llamar {clinica.telefonoVisible}</a><a className="btn btn-outline-vet" href={clinica.facebook} target="_blank" rel="noopener noreferrer">Facebook</a><a className="btn btn-outline-secondary" href={clinica.maps} target="_blank" rel="noopener noreferrer">Cómo llegar</a></div><p className="small text-muted mt-3 mb-0">Datos provenientes de directorios públicos. Este portal es una demostración universitaria y no constituye el canal oficial de reservas ni ventas de la clínica.</p></div></div><div className="col-md-5"><img src={`${import.meta.env.BASE_URL}img/perroAD.jpg`} className="img-fluid rounded-4 shadow-sm" alt="Perro en atención veterinaria"/></div></div></main>}
+function Services(){const [term,setTerm]=useState('');const visibles=servicios.filter(([n,d])=>(n+' '+d).toLowerCase().includes(term.toLowerCase()));return <main className="container py-5"><div className="text-center mb-4"><span className="section-kicker">SERVICIOS</span><h1 className="section-heading">Nuestros servicios médicos</h1><p className="text-muted">Áreas ilustrativas para la presentación universitaria. Los tratamientos, horarios y disponibilidad deben confirmarse con la clínica.</p></div><div className="search-area"><input className="form-control form-control-lg" aria-label="Buscar servicios" placeholder="Buscar consulta, vacunas, estética..." value={term} onChange={e=>setTerm(e.target.value)}/></div><div className="row g-4 mt-2">{visibles.map(([n,d,img])=><div key={n} className="col-md-6 col-lg-4"><article className="service-card h-100"><img src={`${import.meta.env.BASE_URL}img/${img}`} alt={n}/><div className="p-4"><h2 className="h5">{n}</h2><p className="text-muted">{d}</p><a className="btn btn-outline-vet btn-sm" href="#citas">Consultar agenda de prueba</a></div></article></div>)}</div>{!visibles.length&&<p className="text-center py-5 text-muted">No encontramos servicios con esa búsqueda.</p>}</main>}
+function PreguntasFrecuentes(){
+  const items=[
+    ['¿Estas citas son oficiales?','No. Son reservas de demostración para una evaluación universitaria; no sustituyen un canal oficial de atención.'],
+    ['¿Se puede comprar desde el catálogo?','No se realizan compras ni pagos. Los artículos etiquetados DEMO son ejemplos ficticios para probar filtros y administración.'],
+    ['¿Dónde puedo revisar una reserva?','Inicia sesión con Firebase y entra en Citas para consultar, modificar o cancelar tus propios registros de prueba.'],
+    ['¿Cómo se protegen mis datos?','El servidor verifica el token Firebase y restringe las consultas a la cuenta autenticada. Para demostraciones, evita ingresar información sensible real.']
+  ];
+  return <section className="faq-section mt-5" aria-labelledby="faq-heading">
+    <div className="text-center mb-4">
+      <span className="section-kicker">PREGUNTAS FRECUENTES</span>
+      <h2 id="faq-heading" className="section-heading">Cómo funciona este portal</h2>
+    </div>
+    <div className="faq-grid">
+      {items.map(([titulo,detalle])=><details className="faq-item" key={titulo}>
+        <summary>{titulo}</summary>
+        <p className="text-muted mb-0 mt-2">{detalle}</p>
+      </details>)}
+    </div>
+  </section>;
+}
+function Contact(){return <main className="container py-5"><div className="text-center mb-4"><span className="section-kicker">CONTACTO</span><h1 className="section-heading">Estamos para ayudarte</h1><p className="text-muted">Contacto publicado en directorios; confirmar directamente con la clínica antes de usarlo comercialmente.</p></div><div className="row g-4"><div className="col-md-7"><div className="panel h-100"><h2 className="h4">¿Necesitas atención?</h2><p>Consulta nuestros servicios, inicia sesión y registra una cita. El sistema conserva un historial personal en MongoDB mediante la API Laravel.</p><address className="mb-3">{clinica.direccion}</address><div className="d-flex gap-2 flex-wrap"><a className="btn btn-vet" href={`tel:${clinica.telefono}`}>Llamar {clinica.telefonoVisible}</a><a className="btn btn-outline-vet" href={clinica.facebook} target="_blank" rel="noopener noreferrer">Facebook</a><a className="btn btn-outline-secondary" href={clinica.maps} target="_blank" rel="noopener noreferrer">Cómo llegar</a></div><p className="small text-muted mt-3 mb-0">Datos provenientes de directorios públicos. Este portal es una demostración universitaria y no constituye el canal oficial de reservas ni ventas de la clínica.</p></div></div><div className="col-md-5"><img src={`${import.meta.env.BASE_URL}img/perroAD.jpg`} className="img-fluid rounded-4 shadow-sm" alt="Perro en atención veterinaria"/></div></div><PreguntasFrecuentes/></main>}
 function AuthPanel({setError}){
   const [mail,setMail]=useState('');
   const [pass,setPass]=useState('');
@@ -527,10 +598,11 @@ function Stats({user}){
       </div>
       {loading&&<p role="status" aria-live="polite">Calculando estadísticas…</p>}
       {error&&<p role="alert" className="alert alert-danger">{error}</p>}
-      {data?.disponible===false&&<p className="alert alert-warning">{data.mensaje||'El servicio Spring no está disponible.'}</p>}
+      {data?.disponible===false&&<div className="alert alert-warning" role="status"><p className="mb-2">{data.mensaje||'El servicio de estadísticas no está disponible.'}</p><p className="mb-0 small">La sesión y las citas permanecen disponibles; vuelve a intentar en unos momentos.</p></div>}
       {data?.disponible&&<div aria-live="polite">
+        <div className="data-source" role="status">{data.fuente==='spring'?'Fuente verificada: Spring Boot + MongoDB Atlas':'Modo de respaldo: Laravel + MongoDB Atlas. El servicio Spring se está recuperando.'}</div>
         <div className="stats-number">{data.total}</div>
-        <p>Citas registradas por tu cuenta</p>
+        <p>Citas registradas por tu cuenta, incluidas las canceladas</p>
         <div className="row g-4">
           <div className="col-lg-4"><BarChart title="Por especie" entries={data.porEspecie||[]} labelKey="especie"/></div>
           <div className="col-lg-4"><BarChart title="Por estado" entries={data.porEstado||[]} labelKey="estado"/></div>

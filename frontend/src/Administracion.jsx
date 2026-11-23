@@ -7,7 +7,7 @@ const productoVacio = {nombre:'', categoria:'Alimentos', descripcion:'', precio:
 const veterinarioVacio = {nombre:'', especialidad:'Medicina general', activo:true};
 
 export default function Administracion({rol}) {
-  const [seccion, setSeccion] = useState('productos');
+  const [seccion, setSeccion] = useState('resumen');
   const [productos, setProductos] = useState([]);
   const [veterinarios, setVeterinarios] = useState([]);
   const [producto, setProducto] = useState(productoVacio);
@@ -94,15 +94,24 @@ export default function Administracion({rol}) {
   if (rol !== 'administrador') return <main className="container py-5"><div className="alert alert-warning"><ShieldAlert size={19}/> Acceso restringido. Esta página requiere permisos administrativos verificados por Laravel.</div></main>;
 
   return <main className="container py-5">
-    <div className="text-center mb-4"><span className="section-kicker">GESTIÓN INTERNA</span><h1 className="section-heading">Administración de la clínica</h1><p className="text-muted">Los cambios se verifican y guardan desde la API Laravel.</p></div>
+    <div className="text-center mb-4"><span className="section-kicker">GESTIÓN INTERNA</span><h1 className="section-heading">Centro de administración</h1><p className="text-muted">Gestión protegida por permisos del servidor. Los productos DEMO representan registros académicos, no existencias oficiales.</p></div>
     {error && <div className="alert alert-danger" role="alert">{error}</div>}
     {mensaje && <div className="alert alert-success" role="status"><CheckCircle2 size={17}/> {mensaje}</div>}
     <div className="d-flex gap-2 flex-wrap mb-4">
+      <button className={`btn ${seccion==='resumen'?'btn-vet':'btn-outline-vet'}`} onClick={()=>setSeccion('resumen')}>Resumen</button>
       <button className={`btn ${seccion==='productos'?'btn-vet':'btn-outline-vet'}`} onClick={() => setSeccion('productos')}>Productos</button>
       <button className={`btn ${seccion==='veterinarios'?'btn-vet':'btn-outline-vet'}`} onClick={() => setSeccion('veterinarios')}>Veterinarios y horarios</button>
       <button className="btn btn-outline-secondary ms-auto" onClick={cargar} disabled={ocupado}><RefreshCcw size={16}/> Actualizar</button>
     </div>
-    {seccion === 'productos' ? <div className="row g-4">
+    {seccion === 'resumen' ? <div className="d-grid gap-4">
+      <div className="dashboard-summary">
+        <article><strong>{productos.length}</strong><span>Productos registrados</span></article>
+        <article><strong>{veterinarios.filter(v=>v.activo).length}</strong><span>Profesionales activos</span></article>
+        <article><strong>{veterinarios.reduce((sum,v)=>sum+(v.horarios||[]).length,0)}</strong><span>Días de horario configurados</span></article>
+      </div>
+      <section className="panel"><h2 className="h5">Acciones del administrador</h2><p className="text-muted">Publica, modifica u oculta fichas del catálogo; registra profesionales y establece sus horarios. Todas las operaciones se validan en Laravel antes de guardarse en MongoDB.</p><div className="d-flex flex-wrap gap-2"><button type="button" className="btn btn-vet" onClick={()=>setSeccion('productos')}>Gestionar productos</button><button type="button" className="btn btn-outline-vet" onClick={()=>setSeccion('veterinarios')}>Gestionar horarios</button></div></section>
+      <section className="alert alert-info mb-0"><strong>Evaluación académica:</strong> usa datos ficticios para las pruebas de CRUD. No publiques horarios, precios ni imágenes oficiales sin autorización.</section>
+    </div> : seccion === 'productos' ? <div className="row g-4">
       <div className="col-lg-5"><section className="panel"><h2 className="h5">{productoId ? 'Editar producto' : 'Nuevo producto'}</h2><form onSubmit={guardarProducto} className="d-grid gap-3">
         <label>Nombre<input className="form-control mt-1" required minLength={3} maxLength={100} value={producto.nombre} onChange={e=>setProducto(p=>({...p,nombre:e.target.value}))}/></label>
         <label>Categoría<select className="form-select mt-1" value={producto.categoria} onChange={e=>setProducto(p=>({...p,categoria:e.target.value}))}>{['Alimentos','Accesorios','Higiene','Otros'].map(c=><option key={c}>{c}</option>)}</select></label>
