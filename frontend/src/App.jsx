@@ -3,6 +3,7 @@ import {onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPass
 import {CalendarDays,ChevronLeft,ChevronRight,ClipboardList,Clock3,HeartPulse,LogIn,LogOut,Menu,ShieldCheck,Stethoscope,Trash2,Pencil,RefreshCcw,ChartNoAxesColumn,CheckCircle2} from 'lucide-react';
 import {auth} from './firebase.js';
 import {api} from './api.js';
+import {clasificarConexion,mensajeConexion} from './domain/conexion.js';
 import Catalogo from './Catalogo.jsx';
 import {BarChart} from './EstadisticasVisuales.jsx';
 import Administracion from './Administracion.jsx';
@@ -93,22 +94,57 @@ function AuthPanel({setError}){
 function VerificarCorreo({user}){
   const [message,setMessage]=useState('');
   const [busy,setBusy]=useState(false);
+  const [verified,setVerified]=useState(user.emailVerified);
   async function execute(task){
     setBusy(true);
     try{await task();}catch{setMessage('No se pudo consultar el estado. Intenta nuevamente.');}
     finally{setBusy(false);}
   }
+  if(verified) return <p className="alert alert-success" role="status">Correo electrónico verificado correctamente.</p>;
   return <div className="alert alert-warning" role="status">
     <strong>Correo sin verificar.</strong> Revisa tu bandeja de entrada para confirmar la dirección de tu cuenta.
     <div className="d-flex flex-wrap gap-2 mt-2">
       <button type="button" className="btn btn-sm btn-outline-dark" disabled={busy} onClick={()=>execute(async()=>{await sendEmailVerification(user);setMessage('Mensaje de verificación enviado.');})}>Reenviar verificación</button>
-      <button type="button" className="btn btn-sm btn-outline-dark" disabled={busy} onClick={()=>execute(async()=>{await reload(user);setMessage(user.emailVerified?'Correo confirmado.':'Aún no se ha confirmado el correo.');})}>Comprobar estado</button>
+      <button type="button" className="btn btn-sm btn-outline-dark" disabled={busy} onClick={()=>execute(async()=>{await reload(user);setVerified(user.emailVerified);setMessage(user.emailVerified?'Correo confirmado.':'Aún no se ha confirmado el correo.');})}>Comprobar estado</button>
     </div>
     {message&&<p className="small mt-2 mb-0">{message}</p>}
   </div>;
 }
 
-function Citas({user}) {
+function EstadoConexion({user,estado,reintentar}) {
+  return <main className="container py-5">
+    <section className="connection-panel" role={estado==='checking'?'status':'alert'} aria-live="polite">
+      <div className="connection-icon"><ShieldCheck size={32}/></div>
+      <span className="section-kicker">TU CUENTA Y TUS RESERVAS</span>
+      <h1 className="h3 mt-2">{estado==='checking'?'Verificando tu acceso…':'Servicio de reservas temporalmente no disponible'}</h1>
+      <p className="text-muted">{mensajeConexion(estado)}</p>
+      <p className="small">Sesión Firebase: <strong>{user?.email||'Cuenta autenticada'}</strong></p>
+      <div className="d-flex gap-2 flex-wrap justify-content-center">
+        <button className="btn btn-vet" onClick={reintentar} disabled={estado==='checking'}><RefreshCcw size={17}/> Reintentar conexión</button>
+        <button className="btn btn-outline-secondary" onClick={()=>signOut(auth)}>Cerrar sesión</button>
+        <a href="#contacto" className="btn btn-outline-vet">Ver contacto</a>
+      </div>
+      <p className="small text-muted mt-3 mb-0">El portal es un prototipo académico no oficial. No confirmes citas por este sistema hasta verificar el servicio.</p>
+    </section>
+  </main>;
+}
+
+function PanelIngreso(){
+  const [error,setError]=useState('');
+  return <>{error&&<p className="alert alert-danger" role="alert">{error}</p>}<AuthPanel setError={setError}/></>;
+}
+
+function Citas({user,estadoConexion,reintentar}) {
+  if(user===undefined) return <EstadoConexion estado="checking" reintentar={reintentar}/>;
+  if(!user) return <main className="container py-5">
+    <div className="text-center mb-4"><span className="section-kicker">GESTIÓN DE CITAS</span><h1 className="section-heading">Reserva y administra tus citas</h1></div>
+    <PanelIngreso/>
+  </main>;
+  if(estadoConexion!=='ready') return <EstadoConexion user={user} estado={estadoConexion} reintentar={reintentar}/>;
+  return <CitasContenido user={user}/>;
+}
+
+function CitasContenido({user}) {
   const [form,setForm] = useState({...vacio,veterinarioId:''});
   const [edit,setEdit] = useState(null);
   const [list,setList] = useState([]);
@@ -432,6 +468,11 @@ function Citas({user}) {
     </>}
   </main>;
 }
+function EstadisticasConAcceso({user,estadoConexion,reintentar}){
+  if(user===undefined) return <EstadoConexion estado="checking" reintentar={reintentar}/>;
+  if(user&&estadoConexion!=='ready') return <EstadoConexion user={user} estado={estadoConexion} reintentar={reintentar}/>;
+  return <Stats user={user}/>;
+}
 function Stats({user}){
   const [data,setData]=useState(null);
   const [error,setError]=useState('');
@@ -477,13 +518,25 @@ export default function App(){
   const [page,setPage]=useState(location.hash.slice(1)||'inicio');
   const [user,setUser]=useState(undefined);
   const [rol,setRol]=useState(null);
-  useEffect(()=>onAuthStateChanged(auth,setUser),[]);
+  const [estadoConexion,setEstadoConexion]=useState('checking');
+  const [intentos,setIntentos]=useState(0);
+  useEffect(()=>onAuthStateChanged(auth,setUser,()=>setUser(null)),[]);
   useEffect(()=>{
     let activo=true;
     setRol(null);
-    if(user){api.yo().then(r=>{if(activo)setRol(r.rol);}).catch(()=>{if(activo)setRol(null);});}
+    if(user===undefined) {
+      setEstadoConexion('checking');
+    } else if(!user) {
+      setEstadoConexion('signedout');
+    } else {
+      setEstadoConexion('checking');
+      api.yo()
+        .then(r=>{if(activo){setRol(r.rol);setEstadoConexion('ready');}})
+        .catch(e=>{if(activo)setEstadoConexion(clasificarConexion(e));});
+    }
     return()=>{activo=false;};
-  },[user]);
+  },[user,intentos]);
+  const reintentar=()=>setIntentos(i=>i+1);
   useEffect(()=>{
     const onHash=()=>setPage(location.hash.slice(1)||'inicio');
     addEventListener('hashchange',onHash);
@@ -494,10 +547,10 @@ export default function App(){
     <div id="contenido-principal" tabIndex="-1" className="page-content">
     {page==='servicios'?<Services/>:
       page==='productos'?<Catalogo/>:
-      page==='citas'?<Citas user={user}/>:
+      page==='citas'?<Citas user={user} estadoConexion={estadoConexion} reintentar={reintentar}/>:
       page==='contacto'?<Contact/>:
-      page==='estadisticas'?<Stats user={user}/>:
-      page==='administracion'?<Administracion rol={rol}/>:
+      page==='estadisticas'?<EstadisticasConAcceso user={user} estadoConexion={estadoConexion} reintentar={reintentar}/>:
+      page==='administracion'?user&&estadoConexion!=='ready'?<EstadoConexion user={user} estado={estadoConexion} reintentar={reintentar}/>:<Administracion rol={rol}/>:
       <Home setPage={setPage}/>}
     </div>
     <Footer/>
