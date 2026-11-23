@@ -1,21 +1,71 @@
 package pe.edu.continental.service;
+
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Query;
-import org.bson.Document;
 import org.springframework.stereotype.Service;
+import org.bson.Document;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+
 @Service
-public class EstadisticaService{
+public class EstadisticaService {
     private final MongoTemplate mongo;
-    public EstadisticaService(MongoTemplate mongo){this.mongo=mongo;}
-    public Map<String,Object> obtener(String uid){
-        var criterio=Criteria.where("ownerUid").is(uid);
-        long total=mongo.count(Query.query(criterio),"citas");
-        var pipeline=Aggregation.newAggregation(Aggregation.match(Criteria.where("ownerUid").is(uid)),Aggregation.group("especie").count().as("cantidad"),Aggregation.project("cantidad").and("_id").as("especie"),Aggregation.sort(org.springframework.data.domain.Sort.Direction.ASC,"especie"));
-        List<Map<String,Object>> especies=mongo.aggregate(pipeline,"citas",Document.class).getMappedResults().stream().map(d->Map.<String,Object>of("especie",d.getString("especie"),"cantidad",d.get("cantidad"))).toList();
-        return Map.of("total",total,"porEspecie",especies);
+
+    public EstadisticaService(MongoTemplate mongo) {
+        this.mongo = mongo;
+    }
+
+    public Map<String, Object> obtener(String uid) {
+        long total = mongo.getCollection("citas").countDocuments(new Document("ownerUid", uid));
+
+        List<Map<String, Object>> especies = agrupar(uid, "especie", "especie");
+        List<Map<String, Object>> estados = agrupar(uid, "estado", "estado");
+
+        List<Document> pipeline = List.of(
+            new Document("$match", new Document("ownerUid", uid)
+                .append("fechaHoraUtc", new Document("$type", "date"))),
+            new Document("$group", new Document("_id",
+                new Document("$dateToString", new Document("format", "%Y-%m")
+                    .append("date", "$fechaHoraUtc")
+                    .append("timezone", "America/Lima")))
+                .append("cantidad", new Document("$sum", 1))),
+            new Document("$sort", new Document("_id", -1)),
+            new Document("$limit", 12)
+        );
+
+        List<Document> meses = mongo.getCollection("citas")
+            .aggregate(pipeline).into(new ArrayList<>());
+        Collections.reverse(meses);
+        List<Map<String, Object>> porMes = meses.stream()
+            .map(d -> Map.<String, Object>of(
+                "mes", Objects.toString(d.get("_id"), "Sin definir"),
+                "cantidad", ((Number) d.get("cantidad")).longValue()))
+            .toList();
+
+        return Map.of(
+            "total", total,
+            "porEspecie", especies,
+            "porEstado", estados,
+            "porMes", porMes
+        );
+    }
+
+    private List<Map<String, Object>> agrupar(String uid, String campo, String nombre) {
+        List<Document> pipeline = List.of(
+            new Document("$match", new Document("ownerUid", uid)),
+            new Document("$group", new Document("_id", "$" + campo)
+                .append("cantidad", new Document("$sum", 1))),
+            new Document("$sort", new Document("_id", 1))
+        );
+
+        return mongo.getCollection("citas").aggregate(pipeline)
+            .into(new ArrayList<Document>())
+            .stream()
+            .map(d -> Map.<String, Object>of(
+                nombre, Objects.toString(d.get("_id"), "Sin definir"),
+                "cantidad", ((Number) d.get("cantidad")).longValue()))
+            .toList();
     }
 }

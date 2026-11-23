@@ -432,7 +432,47 @@ function Citas({user}) {
     </>}
   </main>;
 }
-function Stats({user}){const [data,setData]=useState(null),[error,setError]=useState(''),[loading,setLoading]=useState(false);async function load(){setLoading(true);setError('');try{setData(await api.estadisticas());}catch(e){setError(e.message);}finally{setLoading(false)}}useEffect(()=>{if(user)load()},[user]);return <main className="container py-5"><div className="text-center mb-4"><span className="section-kicker">SPRING BOOT + MONGODB</span><h1 className="section-heading">Estadísticas de mis citas</h1></div>{!user?<AuthPanel setError={setError}/>:<div className="panel"><div className="d-flex justify-content-between align-items-center"><h2 className="h4">Resumen</h2><button onClick={load} disabled={loading} className="btn btn-outline-vet btn-sm"><RefreshCcw size={16}/> Actualizar</button></div>{error&&<p role="alert" className="alert alert-danger">{error}</p>}{data?.disponible===false&&<p className="alert alert-warning">{data.mensaje||'El servicio Spring no está disponible.'}</p>}{data?.disponible&&<><div className="stats-number">{data.total}</div><p>Citas registradas por tu cuenta</p><div className="row g-3">{(data.porEspecie||[]).map(s=><div className="col-sm-4" key={s.especie}><div className="feature"><strong>{s.cantidad}</strong><p className="mb-0 text-muted">{s.especie}</p></div></div>)}</div></>}{!data&&!loading&&<p>Solicita las estadísticas del servicio.</p>}</div>}</main>}
+function Stats({user}){
+  const [data,setData]=useState(null);
+  const [error,setError]=useState('');
+  const [loading,setLoading]=useState(false);
+  async function load(){
+    setLoading(true);
+    setError('');
+    try{setData(await api.estadisticas());}
+    catch(e){setError(e.message);}
+    finally{setLoading(false);}
+  }
+  useEffect(()=>{if(user)load();},[user]);
+  return <main className="container py-5">
+    <div className="text-center mb-4">
+      <span className="section-kicker">SPRING BOOT + MONGODB</span>
+      <h1 className="section-heading">Estadísticas de mis citas</h1>
+      <p className="text-muted">Indicadores calculados a partir de las reservas de tu cuenta.</p>
+    </div>
+    {!user?<AuthPanel setError={setError}/>:<div className="panel">
+      <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h2 className="h4">Resumen de actividad</h2>
+        <button onClick={load} disabled={loading} className="btn btn-outline-vet btn-sm">
+          <RefreshCcw size={16}/> Actualizar
+        </button>
+      </div>
+      {loading&&<p role="status" aria-live="polite">Calculando estadísticas…</p>}
+      {error&&<p role="alert" className="alert alert-danger">{error}</p>}
+      {data?.disponible===false&&<p className="alert alert-warning">{data.mensaje||'El servicio Spring no está disponible.'}</p>}
+      {data?.disponible&&<div aria-live="polite">
+        <div className="stats-number">{data.total}</div>
+        <p>Citas registradas por tu cuenta</p>
+        <div className="row g-4">
+          <div className="col-lg-4"><BarChart title="Por especie" entries={data.porEspecie||[]} labelKey="especie"/></div>
+          <div className="col-lg-4"><BarChart title="Por estado" entries={data.porEstado||[]} labelKey="estado"/></div>
+          <div className="col-lg-4"><BarChart title="Por mes" entries={data.porMes||[]} labelKey="mes"/></div>
+        </div>
+      </div>}
+      {!data&&!loading&&!error&&<p>Solicita las estadísticas del servicio.</p>}
+    </div>}
+  </main>;
+}
 export default function App(){
   const [page,setPage]=useState(location.hash.slice(1)||'inicio');
   const [user,setUser]=useState(undefined);
