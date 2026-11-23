@@ -207,15 +207,19 @@ function VerificarCorreo({user}){
     try{await task();}catch{setMessage('No se pudo consultar el estado. Intenta nuevamente.');}
     finally{setBusy(false);}
   }
-  if(verified) return <p className="alert alert-success" role="status">Correo electrónico verificado correctamente.</p>;
-  return <div className="alert alert-warning" role="status">
-    <strong>Correo sin verificar.</strong> Revisa tu bandeja de entrada para confirmar la dirección de tu cuenta.
-    <div className="d-flex flex-wrap gap-2 mt-2">
-      <button type="button" className="btn btn-sm btn-outline-dark" disabled={busy} onClick={()=>execute(async()=>{await sendEmailVerification(user);setMessage('Mensaje de verificación enviado.');})}>Reenviar verificación</button>
-      <button type="button" className="btn btn-sm btn-outline-dark" disabled={busy} onClick={()=>execute(async()=>{await reload(user);setVerified(user.emailVerified);setMessage(user.emailVerified?'Correo confirmado.':'Aún no se ha confirmado el correo.');})}>Comprobar estado</button>
+  if(verified) return <div className="verification-banner verified" role="status"><ShieldCheck size={19}/> Dirección de correo confirmada correctamente.</div>;
+  return <section className="verification-banner" aria-labelledby="verification-heading">
+    <div className="verification-icon"><ShieldCheck size={22}/></div>
+    <div className="verification-copy">
+      <h3 id="verification-heading">Verifica tu dirección de correo</h3>
+      <p>Confirma el enlace enviado a tu bandeja de entrada para completar la configuración de tu cuenta.</p>
+      {message&&<p className="verification-feedback" role="status">{message}</p>}
     </div>
-    {message&&<p className="small mt-2 mb-0">{message}</p>}
-  </div>;
+    <div className="verification-actions">
+      <button type="button" className="btn btn-sm btn-outline-vet" disabled={busy} onClick={()=>execute(async()=>{await sendEmailVerification(user);setMessage('Mensaje de verificación enviado.');})}>Reenviar correo</button>
+      <button type="button" className="btn btn-sm btn-vet" disabled={busy} onClick={()=>execute(async()=>{await reload(user);setVerified(user.emailVerified);setMessage(user.emailVerified?'Correo confirmado.':'Aún no se ha confirmado el correo.');})}>Comprobar estado</button>
+    </div>
+  </section>;
 }
 
 function EstadoConexion({user,estado,reintentar}) {
@@ -435,16 +439,30 @@ function CitasContenido({user}) {
     {info&&<div className="alert alert-info" role="status">{info}</div>}
 
     {!user?<AuthPanel setError={setError}/>:<>
-      <div className="booking-welcome">
-        <div><span className="section-kicker">ESPACIO PERSONAL</span><h2 className="h5 mb-1">Tu agenda, en un solo lugar</h2><p className="mb-0 text-muted small">Gestiona reservas y agrega información útil antes de la atención.</p></div>
-        <a className="btn btn-outline-vet" href="#agenda"><CalendarDays size={17}/> Ver calendario</a>
-      </div>
+      <section className="booking-hero-v2" aria-labelledby="booking-hero-heading">
+        <div className="booking-hero-glow" aria-hidden="true"/>
+        <div className="booking-hero-main">
+          <span className="booking-hero-eyebrow"><ShieldCheck size={16}/> TU ESPACIO VETERINARIO</span>
+          <h2 id="booking-hero-heading">Cada cuidado comienza con una buena cita.</h2>
+          <p>Organiza la atención de tus mascotas, consulta horarios libres y mantén tus reservas bajo control, todo desde un solo lugar.</p>
+          <div className="booking-hero-actions">
+            <a className="btn booking-hero-primary" href="#agenda"><CalendarDays size={18}/> Consultar horarios</a>
+            <a className="btn booking-hero-secondary" href="#estadisticas"><ChartNoAxesColumn size={18}/> Mi actividad</a>
+          </div>
+        </div>
+        <aside className="booking-hero-overview" aria-label="Resumen de reservas">
+          <div className="booking-hero-overview-top"><span className="booking-overview-icon"><ClipboardList size={21}/></span><span>Mi agenda</span></div>
+          <strong>{Number.isFinite(Number(total))?Number(total):0}</strong>
+          <span className="booking-overview-label">Reservas en el filtro actual</span>
+          <div className="booking-overview-foot"><span className="booking-status-dot"/> Sesión protegida con Firebase</div>
+        </aside>
+      </section>
 
       {!user.emailVerified&&user.providerData?.some(p=>p.providerId==='password')&&<VerificarCorreo user={user}/>}
       <div className="row g-4">
         <div className="col-lg-5">
-          <div className="panel h-100">
-            <h2 className="h4 mb-3">{edit?'Editar cita':'Registrar nueva cita'}</h2>
+          <div className="panel h-100 booking-panel">
+            <div className="booking-panel-heading"><span className="booking-panel-icon"><CalendarDays size={22}/></span><div><h2 className="h4 mb-1">{edit?'Editar tu reserva':'Solicitar una cita'}</h2><p className="small text-muted mb-0">Completa los datos de tu mascota y elige un horario disponible.</p></div></div>
             {!veterinarios.length&&!busy&&<p className="alert alert-info small" role="status">Aún no hay profesionales habilitados en la agenda. Un administrador debe registrar sus horarios antes de recibir reservas de prueba.</p>}
             <form onSubmit={save} className="d-grid gap-3">
               {[
@@ -522,9 +540,9 @@ function CitasContenido({user}) {
         </div>
 
         <div className="col-lg-7">
-          <div className="panel h-100">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h2 className="h4 mb-0">Mis citas</h2>
+          <div className="panel h-100 booking-panel">
+            <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+              <div className="booking-panel-heading compact"><span className="booking-panel-icon"><ClipboardList size={21}/></span><div><h2 className="h4 mb-0">Historial de reservas</h2><small className="text-muted">Consulta, modifica y revisa tus citas.</small></div></div>
               <select className="form-select form-select-sm w-auto"
                 value={periodo}
                 onChange={e=>{setPeriodo(e.target.value);setPage(1);}}>
@@ -670,14 +688,16 @@ export default function App(){
   return <div className="app"><a className="skip-link" href="#contenido-principal">Saltar al contenido principal</a>
     <Nav page={page} setPage={setPage} user={user} rol={rol}/>
     <div id="contenido-principal" tabIndex="-1" className="page-content">
+    <CrashBoundary key={page} section={page}>
     {page==='servicios'?<Services/>:
-      page==='productos'?<CrashBoundary section="productos"><Catalogo/></CrashBoundary>:
+      page==='productos'?<Catalogo/>:
       page==='citas'?<Citas user={user} estadoConexion={estadoConexion} reintentar={reintentar}/>:
       page==='agenda'?user&&estadoConexion!=='ready'?<EstadoConexion user={user} estado={estadoConexion} reintentar={reintentar}/>:user?<Agenda/>:<Citas user={user} estadoConexion={estadoConexion} reintentar={reintentar}/>:
       page==='contacto'?<Contact/>:
       page==='estadisticas'?<EstadisticasConAcceso user={user} estadoConexion={estadoConexion} reintentar={reintentar}/>:
-      page==='administracion'?user&&estadoConexion!=='ready'?<EstadoConexion user={user} estado={estadoConexion} reintentar={reintentar}/>:<CrashBoundary section="administracion"><Administracion rol={rol}/></CrashBoundary>:
+      page==='administracion'?user&&estadoConexion!=='ready'?<EstadoConexion user={user} estado={estadoConexion} reintentar={reintentar}/>:<Administracion rol={rol}/>:
       <Home setPage={setPage}/>}
+    </CrashBoundary>
     </div>
     <Footer/>
   </div>;

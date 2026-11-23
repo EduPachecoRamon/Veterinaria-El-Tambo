@@ -7,7 +7,9 @@ export default class CrashBoundary extends React.Component {
     this.state={failed:false};
   }
   static getDerivedStateFromError(){return {failed:true};}
-  componentDidCatch(error){console.error('Error de interfaz controlado',error?.name||'Error');}
+  componentDidCatch(error,details){
+    console.error('Error de interfaz en sección',this.props.section,error,details?.componentStack||'');
+  }
   componentDidUpdate(previous){
     if(previous.section!==this.props.section&&this.state.failed)this.setState({failed:false});
   }
