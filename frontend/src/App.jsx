@@ -1,48 +1,58 @@
 import React,{useCallback,useEffect,useState} from 'react';
 import {onAuthStateChanged,createUserWithEmailAndPassword,signInWithEmailAndPassword,signOut,GoogleAuthProvider,signInWithPopup,sendPasswordResetEmail,sendEmailVerification,reload} from 'firebase/auth';
-import {CalendarDays,ChevronLeft,ChevronRight,ClipboardList,Clock3,HeartPulse,LogIn,LogOut,Menu,ShieldCheck,Stethoscope,Trash2,Pencil,RefreshCcw,ChartNoAxesColumn,CheckCircle2} from 'lucide-react';
+import {CalendarDays,ChevronLeft,ChevronRight,ClipboardList,Clock3,HeartPulse,LogIn,LogOut,Menu,ShieldCheck,Stethoscope,Trash2,Pencil,RefreshCcw,ChartNoAxesColumn,CheckCircle2,UserRound,LayoutDashboard,ChevronDown,ImagePlus} from 'lucide-react';
 import {auth} from './firebase.js';
 import {api} from './api.js';
 import {clasificarConexion,mensajeConexion} from './domain/conexion.js';
 import Catalogo from './Catalogo.jsx';
 import {BarChart} from './EstadisticasVisuales.jsx';
 import Administracion from './Administracion.jsx';
+import Agenda from './Agenda.jsx';
+import CrashBoundary from './CrashBoundary.jsx';
+import FotoPrivada from './FotoPrivada.jsx';
+import {guardarMetrica} from './domain/metricas.js';
 import {clinica} from './data/clinica.js';
 import {ESPECIES,vacio,validarCamposCita,citaAFormulario,formatearFecha} from './domain/citas.js';
 const servicios=[['Consulta General','Evaluación física, diagnóstico y atención preventiva.','veterinaria.png'],['Vacunas y Desparasitación','Programas preventivos para perros y gatos.','vacunacion.jpg'],['Medicina Felina','Atención especializada y manejo de bajo estrés.','medicinafelina.jpg'],['Grooming y Estética','Higiene, baño y cuidado del pelaje.','groomingdoggo.jpg'],['Cirugía y Esterilización','Procedimientos clínicos y cuidados postoperatorios.','esterilizacionmasive.jpg'],['Farmacia Veterinaria','Productos veterinarios según indicación profesional.','logocool2.jpg']];
 function Nav({page,setPage,user,rol}){
   const [open,setOpen]=useState(false);
-  useEffect(()=>setOpen(false),[page]);
-  const links=[
-    ['inicio','Inicio'],
-    ['servicios','Servicios'],
-    ['productos','Productos'],
-    ['citas','Citas'],
-    ['contacto','Contacto'],
-    ...(user?[['estadisticas','Estadísticas']]:[]),
-    ...(rol==='administrador'?[['administracion','Administración']]:[])
-  ];
-  const elegir=id=>{setPage(id);setOpen(false);};
+  const [cuenta,setCuenta]=useState(false);
+  useEffect(()=>{setOpen(false);setCuenta(false);},[page]);
+  useEffect(()=>{
+    const cerrar=e=>{if(e.key==='Escape')setCuenta(false);};
+    window.addEventListener('keydown',cerrar);
+    return()=>window.removeEventListener('keydown',cerrar);
+  },[]);
+  const elegir=id=>{setPage(id);setOpen(false);setCuenta(false);};
+  const links=[['inicio','Inicio'],['servicios','Servicios'],['productos','Productos'],['contacto','Contacto']];
   return <>
-    <div className="top-strip">
-      <div className="container top-strip-inner">
-        <span>Portal académico de demostración · Huancayo</span>
-        <span>Sin reservas ni ventas oficiales</span>
-      </div>
-    </div>
-    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top" aria-label="Navegación principal">
+    <div className="top-strip"><div className="container top-strip-inner"><span>Bienestar animal y atención digital</span><span>Portal académico de la Clínica Veterinaria El Tambo</span></div></div>
+    <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top nav-premium" aria-label="Navegación principal">
       <div className="container">
         <a className="navbar-brand d-flex align-items-center fw-bold" href="#inicio" onClick={()=>elegir('inicio')}>
-          <img src={`${import.meta.env.BASE_URL}img/logocool.jpg`} className="rounded-circle me-2 brand-image" alt="Imagen del proyecto"/>
+          <img src={`${import.meta.env.BASE_URL}img/logocool.jpg`} className="rounded-circle me-2 brand-image" alt="Identidad visual de la clínica"/>
           <span>Vet El Tambo</span>
         </a>
-        <button className="navbar-toggler" type="button" onClick={()=>setOpen(v=>!v)} aria-controls="navVet" aria-expanded={open} aria-label={open?'Cerrar menú':'Abrir menú'}>
-          <Menu size={22}/>
-        </button>
+        <button className="navbar-toggler" type="button" onClick={()=>setOpen(v=>!v)} aria-controls="navVet" aria-expanded={open} aria-label={open?'Cerrar menú':'Abrir menú'}><Menu size={22}/></button>
         <div className={`collapse navbar-collapse ${open?'show':''}`} id="navVet">
-          <div className="navbar-nav ms-auto gap-lg-2">
+          <div className="navbar-nav ms-auto align-items-lg-center gap-lg-1">
             {links.map(([id,label])=><a key={id} href={`#${id}`} className={`nav-link ${page===id?'active':''}`} aria-current={page===id?'page':undefined} onClick={()=>elegir(id)}>{label}</a>)}
-            <a href="#citas" onClick={()=>elegir('citas')} className="btn btn-vet btn-sm align-self-lg-center ms-lg-2">{user?'Mis citas':'Ingresar'}</a>
+            {user&&<a href="#agenda" onClick={()=>elegir('agenda')} className={`nav-link ${page==='agenda'?'active':''}`}>Horarios</a>}
+            {rol==='administrador'&&<a className="btn btn-admin-access btn-sm ms-lg-2" href="#administracion" onClick={()=>elegir('administracion')}><LayoutDashboard size={16}/> Personal</a>}
+            <a href="#citas" onClick={()=>elegir('citas')} className="btn btn-vet btn-sm ms-lg-2"><CalendarDays size={16}/>{user?'Mis citas':'Reservar'}</a>
+            {user&&<div className="account-menu" onBlur={e=>{if(!e.currentTarget.contains(e.relatedTarget))setCuenta(false);}}>
+              <button type="button" className="account-trigger" aria-haspopup="true" aria-expanded={cuenta} onClick={()=>setCuenta(v=>!v)} aria-label="Opciones de mi cuenta">
+                <span className="account-avatar"><UserRound size={18}/></span><span className="account-label">Cuenta</span><ChevronDown size={14}/>
+              </button>
+              {cuenta&&<div className="account-dropdown" role="menu">
+                <div className="account-identity" title={user.email||''}><small>Sesión activa</small><strong>{user.email||'Usuario autenticado'}</strong></div>
+                <a role="menuitem" href="#citas" onClick={()=>elegir('citas')}><ClipboardList size={16}/> Mis reservas</a>
+                <a role="menuitem" href="#agenda" onClick={()=>elegir('agenda')}><Clock3 size={16}/> Consultar horarios</a>
+                <a role="menuitem" href="#estadisticas" onClick={()=>elegir('estadisticas')}><ChartNoAxesColumn size={16}/> Mi actividad</a>
+                {rol==='administrador'&&<a role="menuitem" href="#administracion" onClick={()=>elegir('administracion')}><LayoutDashboard size={16}/> Panel del personal</a>}
+                <button type="button" role="menuitem" className="account-logout" onClick={()=>{setCuenta(false);signOut(auth);}}><LogOut size={16}/> Cerrar sesión</button>
+              </div>}
+            </div>}
           </div>
         </div>
       </div>
@@ -90,7 +100,7 @@ function PasosReserva({setPage}){
   </section>;
 }
 function Home({setPage}){return <><section className="hero"><div className="container py-5"><div className="row align-items-center gy-4"><div className="col-lg-7"><p className="eyebrow">PROYECTO ACADÉMICO · CUIDADO ANIMAL</p><h1>Salud y bienestar para tus mascotas</h1><p className="lead mt-3">Explora servicios, consulta productos para mascotas y prueba una agenda digital con acceso seguro desde cualquier dispositivo.</p><p className="small hero-disclaimer">Demostración universitaria independiente. No reemplaza la atención ni las reservas oficiales de la clínica.</p><div className="d-flex flex-wrap gap-2 mt-4"><a href="#citas" className="btn btn-light btn-lg fw-semibold" onClick={()=>setPage('citas')}>Solicitar una cita <ChevronRight size={18}/></a><a className="btn btn-outline-light btn-lg" href="#productos" onClick={()=>setPage('productos')}>Productos y accesorios</a></div></div><div className="col-lg-5"><img className="img-fluid hero-photo" src={`${import.meta.env.BASE_URL}img/perrolemaAD.jpg`} alt="Mascota atendida por la clínica"/></div></div></div></section><section className="container py-5"><div className="text-center mb-4"><span className="section-kicker">CUIDAMOS LO IMPORTANTE</span><h2 className="section-heading">Atención cercana y organizada</h2></div><div className="row g-4">{[[Stethoscope,'Atención médica','Servicios de salud animal en una sola plataforma.'],[CalendarDays,'Citas en línea','Registra y consulta tus citas desde tu cuenta.'],[ShieldCheck,'Datos personales','Acceso autenticado y separación de registros por usuario.']].map(([Icon,t,d])=><div className="col-md-4" key={t}><article className="feature"><div className="feature-icon"><Icon size={26}/></div><h3 className="h5 mt-3">{t}</h3><p className="text-muted mb-0">{d}</p></article></div>)}</div></section><section className="bg-soft py-5"><div className="container row align-items-center gy-4 mx-auto"><div className="col-md-6"><h2 className="section-heading">Servicios para cada etapa</h2><p>Consulta general, atención felina, prevención y estética veterinaria. Conoce las opciones del proyecto original.</p><a className="btn btn-vet" href="#servicios" onClick={()=>setPage('servicios')}>Ver los servicios</a></div><div className="col-md-6"><img className="img-fluid rounded-4 shadow-sm" src={`${import.meta.env.BASE_URL}img/gatolindoAD2.jpg`} alt="Gato saludable"/></div></div></section><PasosReserva setPage={setPage}/></>}
-function Services(){const [term,setTerm]=useState('');const visibles=servicios.filter(([n,d])=>(n+' '+d).toLowerCase().includes(term.toLowerCase()));return <main className="container py-5"><div className="text-center mb-4"><span className="section-kicker">SERVICIOS</span><h1 className="section-heading">Nuestros servicios médicos</h1><p className="text-muted">Áreas ilustrativas para la presentación universitaria. Los tratamientos, horarios y disponibilidad deben confirmarse con la clínica.</p></div><div className="search-area"><input className="form-control form-control-lg" aria-label="Buscar servicios" placeholder="Buscar consulta, vacunas, estética..." value={term} onChange={e=>setTerm(e.target.value)}/></div><div className="row g-4 mt-2">{visibles.map(([n,d,img])=><div key={n} className="col-md-6 col-lg-4"><article className="service-card h-100"><img src={`${import.meta.env.BASE_URL}img/${img}`} alt={n}/><div className="p-4"><h2 className="h5">{n}</h2><p className="text-muted">{d}</p><a className="btn btn-outline-vet btn-sm" href="#citas">Consultar agenda de prueba</a></div></article></div>)}</div>{!visibles.length&&<p className="text-center py-5 text-muted">No encontramos servicios con esa búsqueda.</p>}</main>}
+function Services(){const [term,setTerm]=useState('');const visibles=servicios.filter(([n,d])=>(n+' '+d).toLowerCase().includes(term.toLowerCase()));return <main className="container py-5"><div className="text-center mb-4"><span className="section-kicker">SERVICIOS</span><h1 className="section-heading">Nuestros servicios médicos</h1><p className="text-muted">Áreas ilustrativas para la presentación universitaria. Los tratamientos, horarios y disponibilidad deben confirmarse con la clínica.</p></div><div className="search-area"><input className="form-control form-control-lg" aria-label="Buscar servicios" placeholder="Buscar consulta, vacunas, estética..." value={term} onChange={e=>setTerm(e.target.value)}/></div><div className="row g-4 mt-2">{visibles.map(([n,d,img])=><div key={n} className="col-md-6 col-lg-4"><article className="service-card h-100"><img src={`${import.meta.env.BASE_URL}img/${img}`} alt={n}/><div className="p-4"><h2 className="h5">{n}</h2><p className="text-muted">{d}</p><a className="btn btn-outline-vet btn-sm" href="#citas">Ver horarios disponibles</a></div></article></div>)}</div>{!visibles.length&&<p className="text-center py-5 text-muted">No encontramos servicios con esa búsqueda.</p>}</main>}
 function PreguntasFrecuentes(){
   const items=[
     ['¿Estas citas son oficiales?','No. Son reservas de demostración para una evaluación universitaria; no sustituyen un canal oficial de atención.'],
@@ -251,27 +261,31 @@ function CitasContenido({user}) {
   const [busy,setBusy] = useState(false);
   const [error,setError] = useState('');
   const [info,setInfo] = useState('');
-  const [metrics,setMetrics] = useState([]);
+  const [foto,setFoto] = useState(null);
   const [veterinarios,setVeterinarios] = useState([]);
   const [turnos,setTurnos] = useState([]);
   const [cargandoTurnos,setCargandoTurnos] = useState(false);
 
   const medir = useCallback(async(tipo,func)=>{
-    const start = performance.now();
-    try {
-      const resultado = await func();
-      setMetrics(old=>[{
-        tipo,ms:Math.round((performance.now()-start)*100)/100,
-        ok:true,fecha:new Date().toLocaleTimeString('es-PE')
-      },...old].slice(0,20));
+    const inicio=performance.now();
+    try{
+      const resultado=await func();
+      guardarMetrica({tipo,ms:Math.round((performance.now()-inicio)*100)/100,ok:true,fecha:new Date().toLocaleTimeString('es-PE')});
       return resultado;
-    } catch(e) {
-      setMetrics(old=>[{
-        tipo,ms:Math.round((performance.now()-start)*100)/100,
-        ok:false,fecha:new Date().toLocaleTimeString('es-PE')
-      },...old].slice(0,20));
+    }catch(e){
+      guardarMetrica({tipo,ms:Math.round((performance.now()-inicio)*100)/100,ok:false,fecha:new Date().toLocaleTimeString('es-PE')});
       throw e;
     }
+  },[]);
+
+  useEffect(()=>{
+    try {
+      const seleccion=JSON.parse(sessionStorage.getItem('vet-agenda-seleccion')||'null');
+      if(seleccion?.veterinarioId&&seleccion?.fecha&&seleccion?.hora){
+        setForm(o=>({...o,veterinarioId:seleccion.veterinarioId,fecha:seleccion.fecha,hora:seleccion.hora}));
+      }
+      sessionStorage.removeItem('vet-agenda-seleccion');
+    } catch {}
   },[]);
 
   const load = useCallback(async(p=1,f='todas')=>{
@@ -330,6 +344,7 @@ function CitasContenido({user}) {
     setForm({...vacio,veterinarioId:''});
     setEdit(null);
     setTurnos([]);
+    setFoto(null);
   }
 
   async function save(e){
@@ -352,12 +367,21 @@ function CitasContenido({user}) {
         fechaHora:turno.fechaHora
       };
 
-      await medir(edit?'PUT /citas':'POST /citas',()=>
+      const resultado=await medir(edit?'PUT /citas':'POST /citas',()=>
         edit?api.editar(edit.id,datos):api.crear(datos)
       );
+      const citaId=resultado?.data?.id||edit?.id;
+      let avisoFoto='';
+      if(foto&&citaId){
+        try{
+          await api.subirFoto(citaId,foto);
+        }catch(error){
+          avisoFoto=' La cita se guardó, pero no fue posible adjuntar la imagen: '+error.message;
+        }
+      }
       reset();
       await load(1,periodo);
-      setInfo('Cita guardada correctamente.');
+      setInfo(avisoFoto?'Cita guardada.'+avisoFoto:'Cita y cambios guardados correctamente.');
     } catch(e) {
       setError(e.message);
     } finally {
@@ -381,6 +405,17 @@ function CitasContenido({user}) {
     }
   }
 
+  async function fotoExistente(id,file){
+    if(!file)return;
+    setBusy(true);setError('');
+    try{
+      await api.subirFoto(id,file);
+      await load(page,periodo);
+      setInfo('Fotografía adjuntada a la reserva.');
+    }catch(e){setError(e.message);}
+    finally{setBusy(false);}
+  }
+
   function editar(c){
     setEdit(c);
     const datos=citaAFormulario(c);
@@ -400,10 +435,9 @@ function CitasContenido({user}) {
     {info&&<div className="alert alert-info" role="status">{info}</div>}
 
     {!user?<AuthPanel setError={setError}/>:<>
-      <div className="panel mb-4 d-flex justify-content-between align-items-center">
-        <span>Cuenta: <strong>{user.email}</strong></span>
-        <button className="btn btn-outline-secondary btn-sm"
-          onClick={()=>signOut(auth)}>Cerrar sesión</button>
+      <div className="booking-welcome">
+        <div><span className="section-kicker">ESPACIO PERSONAL</span><h2 className="h5 mb-1">Tu agenda, en un solo lugar</h2><p className="mb-0 text-muted small">Gestiona reservas y agrega información útil antes de la atención.</p></div>
+        <a className="btn btn-outline-vet" href="#agenda"><CalendarDays size={17}/> Ver calendario</a>
       </div>
 
       {!user.emailVerified&&user.providerData?.some(p=>p.providerId==='password')&&<VerificarCorreo user={user}/>}
@@ -466,6 +500,10 @@ function CitasContenido({user}) {
                 </select>
               </label>
 
+              <label className="photo-upload-label">Adjuntar foto de la mascota (opcional)
+                <input className="form-control mt-2" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>setFoto(e.target.files?.[0]||null)}/>
+                <small className="text-muted">JPEG, PNG o WebP · máximo 3 MB. La imagen solo estará disponible para el propietario y el personal autorizado.</small>
+              </label>
               {cargandoTurnos&&<p className="small text-muted">Consultando horarios...</p>}
               {!cargandoTurnos&&form.fecha&&form.veterinarioId&&
                 !turnos.some(t=>t.disponible)&&
@@ -507,6 +545,11 @@ function CitasContenido({user}) {
                   <p className="mb-1">{formatearFecha(c.fechaHora)}</p>
                   <p className="small mb-1">{c.motivo}</p>
                   <span className="badge text-bg-secondary">{c.estado}</span>
+                  <div className="d-flex flex-wrap align-items-center gap-2 mt-2">
+                    {c.tieneFoto?<FotoPrivada citaId={c.id}/>:<label className="btn btn-outline-vet btn-sm photo-attach-label"><ImagePlus size={15}/> Adjuntar foto
+                      <input className="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>fotoExistente(c.id,e.target.files?.[0])}/>
+                    </label>}
+                  </div>
                 </div>
                 {c.estado==='confirmada'&&
                   <div className="d-flex flex-column gap-2">
@@ -546,23 +589,6 @@ function CitasContenido({user}) {
         </div>
       </div>
 
-      <div className="panel mt-4">
-        <h2 className="h5">Diagnóstico de consultas · Unidad 3</h2>
-        <p className="text-muted small">
-          Duración observada desde el navegador, incluyendo red y procesamiento.
-        </p>
-        <div className="table-responsive">
-          <table className="table table-sm">
-            <thead><tr>
-              <th>Operación</th><th>Duración</th><th>Resultado</th><th>Hora</th>
-            </tr></thead>
-            <tbody>{metrics.map((m,i)=><tr key={i}>
-              <td>{m.tipo}</td><td>{m.ms} ms</td>
-              <td>{m.ok?'Correcto':'Error'}</td><td>{m.fecha}</td>
-            </tr>)}</tbody>
-          </table>
-        </div>
-      </div>
     </>}
   </main>;
 }
@@ -645,11 +671,12 @@ export default function App(){
     <Nav page={page} setPage={setPage} user={user} rol={rol}/>
     <div id="contenido-principal" tabIndex="-1" className="page-content">
     {page==='servicios'?<Services/>:
-      page==='productos'?<Catalogo/>:
+      page==='productos'?<CrashBoundary section="productos"><Catalogo/></CrashBoundary>:
       page==='citas'?<Citas user={user} estadoConexion={estadoConexion} reintentar={reintentar}/>:
+      page==='agenda'?user&&estadoConexion!=='ready'?<EstadoConexion user={user} estado={estadoConexion} reintentar={reintentar}/>:user?<Agenda/>:<Citas user={user} estadoConexion={estadoConexion} reintentar={reintentar}/>:
       page==='contacto'?<Contact/>:
       page==='estadisticas'?<EstadisticasConAcceso user={user} estadoConexion={estadoConexion} reintentar={reintentar}/>:
-      page==='administracion'?user&&estadoConexion!=='ready'?<EstadoConexion user={user} estado={estadoConexion} reintentar={reintentar}/>:<Administracion rol={rol}/>:
+      page==='administracion'?user&&estadoConexion!=='ready'?<EstadoConexion user={user} estado={estadoConexion} reintentar={reintentar}/>:<CrashBoundary section="administracion"><Administracion rol={rol}/></CrashBoundary>:
       <Home setPage={setPage}/>}
     </div>
     <Footer/>
