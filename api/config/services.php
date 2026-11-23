@@ -19,6 +19,8 @@ return [
         'firebase_project_id' => env('FIREBASE_PROJECT_ID', ''),
         'firebase_service_account' => env('FIREBASE_SERVICE_ACCOUNT', ''),
         'firebase_credentials_b64' => env('FIREBASE_CREDENTIALS_B64', ''),
+        'spring_url' => env('SPRING_URL', ''),
+        'spring_internal_key' => env('SPRING_INTERNAL_KEY', ''),
     ],
 
     'postmark' => [
