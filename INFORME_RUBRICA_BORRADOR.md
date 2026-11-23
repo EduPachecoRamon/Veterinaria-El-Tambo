@@ -96,3 +96,16 @@ Redactar al terminar pruebas. Documentar dificultades reales como rutas Apache e
 ## Adiciones recientes al sistema
 
 Se añadieron en GitHub autenticación Google con Firebase, recuperación/verificación de correo, filtro de catálogo desde Laravel, agrupación de estadísticas en Spring Boot y mejoras de accesibilidad, rendimiento y SEO. Su funcionamiento en producción requiere evidencias reales según `GUIA_MEJORAS_INTEGRACION.md`. La verificación Search Console es opcional y el sitio sigue identificado como no oficial; no afirmar que sea el sitio oficial de la clínica.
+
+## Actualización del 23 de noviembre de 2026
+
+La plataforma React, la API Laravel y el servicio Spring Boot se encuentran desplegados en Render. Firebase autentica usuarios y MongoDB Atlas respondió correctamente desde Laravel para el catálogo.
+
+Se creó la colección `productos` con 8 fichas ficticias etiquetadas **DEMO**, distribuidas entre Alimentos, Accesorios, Higiene y Otros; no se atribuyen a inventario real ni tienen precios inventados.
+
+La evidencia comparativa del **criterio 5** ya existe en `CRITERIO5_RESULTADOS_REALES.md`, en una base aislada con 1500 citas ficticias y un índice compuesto. Se redujeron los documentos examinados de 1500 a 10, con siete ejecuciones por estrategia.
+
+Se configuró la comunicación Spring-Laravel en Render y se añadió un modo de respaldo Laravel+MongoDB claramente etiquetado para períodos de indisponibilidad de Spring. **Para demostrar Spring en el criterio 3, todavía debe capturarse el panel con fuente `spring`.**
+
+Se renovó la navegación móvil, el catálogo de demostración, las preguntas frecuentes y el panel administrativo. Una ejecución satisfactoria de CI no reemplaza las capturas en dispositivos distintos ni las pruebas reales de CRUD y roles.
+

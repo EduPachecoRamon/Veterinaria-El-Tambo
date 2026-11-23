@@ -42,7 +42,6 @@ input,select,textarea{max-width:100%}
 @media(max-width:991px){.navbar .nav-link[aria-current="page"]{border-left:3px solid #0284c7;border-bottom:0;background:#f0f9ff}}
 @media(prefers-reduced-motion:reduce){.step-card{transition:none!important;transform:none!important}}
 
-/* Presentación responsiva de la entrega final */
 html,body,#root{min-width:0;max-width:100%;overflow-x:hidden}
 .navbar .container,.navbar-brand,.navbar-nav{min-width:0}
 .top-strip-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
