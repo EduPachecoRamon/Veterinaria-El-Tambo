@@ -1,4 +1,4 @@
-import {useEffect,useMemo,useState} from 'react';
+import React, {useEffect,useMemo,useState} from 'react';
 import {ChevronLeft,ChevronRight,Filter,PackageSearch,Phone,Search,ShoppingBag,SlidersHorizontal,RefreshCcw} from 'lucide-react';
 import {api} from './api.js';
 import {clinica} from './data/clinica.js';

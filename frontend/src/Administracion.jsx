@@ -1,4 +1,4 @@
-import {useCallback,useEffect,useState} from 'react';
+import React, {useCallback,useEffect,useState} from 'react';
 import {Activity,BarChart3,CalendarDays,Camera,CheckCircle2,ClipboardList,Clock3,Image as ImageIcon,Package,RefreshCcw,Save,ShieldAlert,Stethoscope,Users} from 'lucide-react';
 import {api} from './api.js';
 import {DIAS,leerIntervalos} from './domain/horarios.js';
