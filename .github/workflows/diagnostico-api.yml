@@ -1,0 +1,15 @@
+name: Diagnostico temporal de API MongoDB
+on:
+  push:
+    branches:
+      - diagnostico/mongodb-500
+
+jobs:
+  read-only-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Solicitar catalogo publico sin datos de autenticacion
+        run: |
+          status=$(curl --silent --show-error --connect-timeout 15 --max-time 45 -o /dev/null -w '%{http_code}' https://vet-tambo-api.onrender.com/api/productos)
+          echo "HTTP status: $status"
+          echo "No se guardan respuestas ni datos de usuarios"
