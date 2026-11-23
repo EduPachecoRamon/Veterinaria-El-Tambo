@@ -45,3 +45,7 @@ Ver `GUIA_MEJORAS_INTEGRACION.md` y `GUIA_GOOGLE_SEARCH_CONSOLE.md` antes de act
 - No confundas pruebas locales de sintaxis con integración o certificación de seguridad.
 
 Consulta `MATRIZ_RUBRICA_ENTREGA.md`, `EVIDENCIAS_Y_PRUEBAS.md` y `FUENTES_NEGOCIO.md` para preparar el informe final.
+
+## Revisión final de estabilidad
+
+Para la configuración de Firebase Admin SDK **exclusivamente en Laravel**, diagnóstico de errores 503 y lista de evidencias vinculada a laboratorios de las semanas 7, 10, 12 y 14, consulta [ENTREGA_FINAL_CONFIGURACION_Y_RUBRICA.md](ENTREGA_FINAL_CONFIGURACION_Y_RUBRICA.md). Nunca publiques las credenciales del archivo JSON.

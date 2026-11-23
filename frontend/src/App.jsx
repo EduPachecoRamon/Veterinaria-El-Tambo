@@ -340,6 +340,7 @@ function CitasContenido({user}) {
         <div className="col-lg-5">
           <div className="panel h-100">
             <h2 className="h4 mb-3">{edit?'Editar cita':'Registrar nueva cita'}</h2>
+            {!veterinarios.length&&!busy&&<p className="alert alert-info small" role="status">Aún no hay profesionales habilitados en la agenda. Un administrador debe registrar sus horarios antes de recibir reservas de prueba.</p>}
             <form onSubmit={save} className="d-grid gap-3">
               {[
                 ['propietario','Nombre del propietario',80],
@@ -364,7 +365,7 @@ function CitasContenido({user}) {
                 <select required className="form-select mt-1"
                   value={form.veterinarioId}
                   onChange={e=>setForm(o=>({...o,veterinarioId:e.target.value,hora:''}))}>
-                  <option value="">Selecciona un veterinario</option>
+                  <option value="">{veterinarios.length?'Selecciona un veterinario':'Sin profesionales publicados'}</option>
                   {veterinarios.map(v=>
                     <option key={v.id} value={v.id}>
                       {v.nombre} - {v.especialidad}
