@@ -18,11 +18,22 @@ test('estadisticas identifica la fuente del resultado',()=>{
 });
 
 test('catalogo distingue datos de demostracion del inventario real',()=>{
-  assert.match(catalog,/FICHA DE PRUEBA/);
-  assert.match(catalog,/Producto ficticio, sin inventario confirmado/);
+  assert.match(catalog,/Producto ilustrativo/);
+  assert.match(catalog,/Precio referencial sujeto a confirmación/);
 });
 
 test('se incluyen estilos para pantallas estrechas y altura reducida',()=>{
   assert.match(styles,/@media\(max-width:870px\)/);
   assert.match(styles,/@media\(max-height:360px\)/);
+});
+
+test('catalogo tolera registros incompletos y permite reintento',()=>{
+  assert.match(catalog,/Array\.isArray\(r\?\.data\)/);
+  assert.match(catalog,/categorias\.includes\(p\.categoria\)/);
+  assert.match(catalog,/setReintentos/);
+});
+test('separacion operativa de la cuenta y panel del personal',()=>{
+  assert.match(app,/Panel del personal/);
+  assert.match(app,/Mis reservas/);
+  assert.match(app,/fotoExistente/);
 });
