@@ -1,23 +1,52 @@
-// Script de solo lectura para mongosh. Ejecútalo sobre una base de PRUEBAS.
-// Antes de ejecutarlo, define la variable de entorno UID_PRUEBA con un ownerUid de prueba,
-// y conecta mongosh a la base correcta (ejemplo: clinica_eltambo).
 const uid = process.env.UID_PRUEBA;
-if (!uid) throw new Error('Configura UID_PRUEBA con un identificador de cuenta de prueba.');
-const citas = db.getCollection('citas');
-const filtro = {ownerUid: uid, fechaHoraUtc: {$gte: new Date()}};
-const orden = {fechaHoraUtc: 1, _id: 1};
-function observar(nombre, hint) {
-  const resultado = citas.find(filtro).sort(orden).limit(10).hint(hint).explain('executionStats');
-  printjson({
-    estrategia: nombre,
-    registrosEncontrados: resultado.executionStats.nReturned,
-    documentosExaminados: resultado.executionStats.totalDocsExamined,
-    clavesExaminadas: resultado.executionStats.totalKeysExamined,
-    tiempoConsultaMs: resultado.executionStats.executionTimeMillis,
-    plan: resultado.queryPlanner.winningPlan
-  });
+if (!uid) throw new Error('Define UID_PRUEBA de una cuenta de prueba antes de analizar consultas.');
+
+const collection = db.getCollection('citas');
+const indexes = collection.getIndexes();
+const indexed = indexes.some(x => x.name === 'owner_fecha_id_asc');
+const repetitions = 7;
+const filter = {ownerUid: uid};
+const sort = {fechaHoraUtc: 1, _id: 1};
+
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
 }
-print('Índices existentes:'); printjson(citas.getIndexes());
-observar('Exploración completa', {$natural: 1});
-observar('Índice compuesto', 'owner_fecha_id_asc');
-print('Realiza varias corridas con el mismo dataset; comparar una sola medición no prueba rendimiento.');
+
+function inspect(name, hint) {
+  const samples = [];
+  for (let i = 0; i < repetitions; i++) {
+    const result = collection.find(filter).sort(sort).limit(10).hint(hint).explain('executionStats');
+    const stats = result.executionStats;
+    samples.push({
+      timeMs: stats.executionTimeMillis,
+      docsExamined: stats.totalDocsExamined,
+      keysExamined: stats.totalKeysExamined,
+      returned: stats.nReturned
+    });
+  }
+  return {
+    strategy: name,
+    runs: repetitions,
+    medianTimeMs: median(samples.map(x => x.timeMs)),
+    medianDocsExamined: median(samples.map(x => x.docsExamined)),
+    medianKeysExamined: median(samples.map(x => x.keysExamined)),
+    returned: samples[0].returned
+  };
+}
+
+print('Base de datos: ' + db.getName());
+print('Documentos totales: ' + collection.estimatedDocumentCount());
+print('Indices: ' + indexes.map(i => i.name).join(', '));
+const natural = inspect('COLLSCAN (referencia sin indice)', {$natural: 1});
+printjson(natural);
+if (!indexed) {
+  print('PENDIENTE: owner_fecha_id_asc no existe; no se inventa la medicion indexada.');
+} else {
+  const optimized = inspect('Indice compuesto por propietario y fecha', 'owner_fecha_id_asc');
+  printjson(optimized);
+  if (natural.returned !== optimized.returned) {
+    print('ADVERTENCIA: cantidad de resultados diferente; detener comparacion.');
+  }
+}
+print('Interpretar con un dataset de prueba suficiente; no usar un dato aislado como prueba de mejora.');
