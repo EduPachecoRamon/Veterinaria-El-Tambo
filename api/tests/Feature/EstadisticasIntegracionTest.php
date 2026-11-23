@@ -22,7 +22,7 @@ class EstadisticasIntegracionTest extends TestCase
         config()->set('services.clinica.spring_internal_key', 'clave-interna-de-prueba');
 
         Http::fake([
-            'spring.example.test/internal/estadisticas*' => Http::response([
+            'https://spring.example.test/internal/estadisticas*' => Http::response([
                 'total' => 2,
                 'porEspecie' => [['especie' => 'Perro', 'cantidad' => 2]],
                 'porEstado' => [['estado' => 'cancelada', 'cantidad' => 1]],
@@ -65,7 +65,7 @@ class EstadisticasIntegracionTest extends TestCase
         config()->set('services.clinica.spring_url', 'https://spring.example.test');
         config()->set('services.clinica.spring_internal_key', 'clave-interna-de-prueba');
         Http::fake([
-            'spring.example.test/internal/estadisticas*' => Http::response([
+            'https://spring.example.test/internal/estadisticas*' => Http::response([
                 'error' => 'respuesta interna que no debe mostrarse'
             ], 503)
         ]);
