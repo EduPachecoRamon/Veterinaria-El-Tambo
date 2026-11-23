@@ -4,6 +4,7 @@ import {api} from './api.js';
 import {clinica} from './data/clinica.js';
 
 const categorias = ['Todas', 'Alimentos', 'Accesorios', 'Higiene', 'Otros'];
+const ilustraciones = {Alimentos:'🥣',Accesorios:'🐾',Higiene:'🫧',Otros:'🎾'};
 
 export default function Catalogo() {
   const [categoria, setCategoria] = useState('Todas');
@@ -63,19 +64,21 @@ export default function Catalogo() {
       </label>
     </div>
     {cargando && <p role="status" aria-live="polite">Consultando productos…</p>}
-    {error && <div className="alert alert-warning" role="alert">{error} El catálogo requiere conexión con Laravel.</div>}
+    {error && <div className="alert alert-warning" role="alert"><strong>No se pudo cargar el catálogo.</strong> {error} <button type="button" className="btn btn-sm btn-outline-dark ms-2" onClick={()=>setOrden(v=>v==='nombre_asc'?'precio_asc':'nombre_asc')}>Reintentar</button></div>}
     {!cargando && !error && <>
       <div className="row g-4">
         {visibles.map(p => <div className="col-md-6 col-lg-4" key={p.id}>
           <article className="service-card h-100 d-flex flex-column">
-            <img src={p.imagenUrl || `${import.meta.env.BASE_URL}img/productosejemplo.jpg`} loading="lazy" alt={p.imagenUrl ? `Imagen de ${p.nombre}` : 'Imagen ilustrativa de accesorios para mascotas'}/>
+            <div className={`catalog-art catalog-art-${p.categoria.toLowerCase()}`}>
+              {p.imagenUrl?<img src={p.imagenUrl} loading="lazy" alt={`Fotografía de ${p.nombre}`}/>:<span className="catalog-art-icon" aria-hidden="true">{ilustraciones[p.categoria]||'🐾'}</span>}
+            </div>
             <div className="p-4 d-flex flex-column h-100">
-              <span className="tag align-self-start mb-2">{p.categoria}</span>
+              <div className="d-flex flex-wrap align-items-center gap-2 mb-2"><span className="tag">{p.categoria}</span>{/DEMO/i.test(p.nombre)&&<span className="demo-product-tag">FICHA DE PRUEBA</span>}</div>
               <h2 className="h5">{p.nombre}</h2>
               <p className="text-muted">{p.descripcion}</p>
               <p className="fw-semibold mb-2">{p.precio == null ? 'Precio: consultar' : `Precio referencial: S/ ${Number(p.precio).toFixed(2)}`}</p>
-              <p className={`small ${p.disponible ? 'text-success' : 'text-danger'}`}>{p.disponible ? 'Consultar disponibilidad' : 'Temporalmente no disponible'}</p>
-              <a className="btn btn-outline-vet mt-auto" href={`tel:${clinica.telefono}`}><Phone size={16}/> Consultar por teléfono</a>
+              <p className={`small ${p.disponible ? 'text-success' : 'text-muted'}`}>{/DEMO/i.test(p.nombre)?'Producto ficticio, sin inventario confirmado':p.disponible?'Disponibilidad por confirmar':'No disponible actualmente'}</p>
+              {/DEMO/i.test(p.nombre)?<a className="btn btn-outline-vet mt-auto" href="#contacto">Información del proyecto</a>:<a className="btn btn-outline-vet mt-auto" href={`tel:${clinica.telefono}`}><Phone size={16}/> Consultar por teléfono</a>}
             </div>
           </article>
         </div>)}
