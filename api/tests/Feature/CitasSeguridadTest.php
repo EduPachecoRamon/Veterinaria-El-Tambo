@@ -67,4 +67,29 @@ class CitasSeguridadTest extends TestCase
         $this->getJson('/api/productos?categoria=Medicamentos')->assertUnprocessable()
             ->assertJsonValidationErrors(['categoria']);
     }
+    public function test_firebase_muestra_503_si_falta_configuracion_de_servidor(): void
+    {
+        config()->set('services.clinica.firebase_project_id', '');
+        config()->set('services.clinica.firebase_credentials_b64', '');
+        config()->set('services.clinica.firebase_service_account', '');
+
+        $this->withToken('token-de-prueba')
+            ->getJson('/api/yo')
+            ->assertStatus(503)
+            ->assertJsonPath('code', 'AUTH_NOT_CONFIGURED');
+    }
+
+    public function test_firebase_rechaza_credencial_invalida_sin_revelarla(): void
+    {
+        config()->set('services.clinica.firebase_project_id', 'veterinaria-el-tambo');
+        config()->set('services.clinica.firebase_credentials_b64', 'valor-invalido');
+        config()->set('services.clinica.firebase_service_account', '');
+
+        $response = $this->withToken('token-de-prueba')
+            ->getJson('/api/yo')
+            ->assertStatus(503)
+            ->assertJsonPath('code', 'AUTH_NOT_CONFIGURED');
+
+        $this->assertStringNotContainsString('valor-invalido', $response->getContent());
+    }
 }

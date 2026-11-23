@@ -1,5 +1,14 @@
 import {auth} from './firebase.js';
 
+export class ApiError extends Error {
+  constructor(message, status = 0, code = 'REQUEST_FAILED') {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
 const BASE = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api').replace(/\/$/, '');
 
 export async function request(path, {method = 'GET', body, signal, publico = false} = {}) {
@@ -18,8 +27,9 @@ export async function request(path, {method = 'GET', body, signal, publico = fal
       body: body === undefined ? undefined : JSON.stringify(body),
       signal
     });
-  } catch {
-    throw new Error('No se pudo conectar con la API. Comprueba la conexión y VITE_API_URL.');
+  } catch (error) {
+    if (error?.name === 'AbortError') throw error;
+    throw new ApiError('No se pudo establecer conexión con el servidor. Vuelve a intentarlo.', 0, 'NETWORK_ERROR');
   }
   let data;
   try {
@@ -27,7 +37,10 @@ export async function request(path, {method = 'GET', body, signal, publico = fal
   } catch {
     data = {};
   }
-  if (!response.ok) throw new Error(Object.values(data.errors || {}).flat()[0] || data.message || `Error HTTP ${response.status}`);
+  if (!response.ok) {
+    const reason = Object.values(data.errors || {}).flat()[0] || data.message || `Error HTTP ${response.status}`;
+    throw new ApiError(reason, response.status, data.code || 'REQUEST_FAILED');
+  }
   return data;
 }
 

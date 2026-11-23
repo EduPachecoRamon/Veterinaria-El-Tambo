@@ -5,6 +5,7 @@ Los siguientes datos deben completarse **al ejecutar el proyecto**; no son resul
 | Caso | Condición | Resultado esperado | Resultado obtenido | Evidencia |
 |---|---|---|---|---|
 | F-01 | Cuenta de prueba inicia sesión | Sesión válida | Pendiente | Captura |
+| F-01b | Cuenta Firebase autenticada con API sin credencial | HTTP 503 del backend, mensaje de reconexión sin cerrar sesión | Diagnóstico 503 en Render, corrección de interfaz por validar | Registros Render + captura del formulario |
 | F-02 | Crear cita en horario libre | HTTP 201, registro MongoDB | Pendiente | API + base |
 | F-03 | Intentar reservar mismo turno dos veces | Segunda operación rechazada, HTTP 409 | Pendiente | API + índices |
 | F-04 | Editar cita propia | HTTP 200, horario nuevo | Pendiente | API + base |
