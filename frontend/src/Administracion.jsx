@@ -9,7 +9,9 @@ import FotoPrivada from './FotoPrivada.jsx';
 const productoVacio={nombre:'',categoria:'Alimentos',descripcion:'',precio:'',imagenUrl:'',disponible:true,activo:true};
 const veterinarioVacio={nombre:'',especialidad:'Medicina general',activo:true};
 function fechaLocal(){
-  return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+  const v=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  return `${v.year}-${v.month}-${v.day}`;
 }
 function numero(n){return Number.isFinite(Number(n))?Number(n):0;}
 function Kpi({icon:Icon,valor,titulo,detalle}){

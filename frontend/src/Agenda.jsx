@@ -3,7 +3,9 @@ import {CalendarDays,ChevronLeft,ChevronRight,Clock3,RefreshCcw} from 'lucide-re
 import {api} from './api.js';
 
 function fechaPeru(date=new Date()){
-  return new Intl.DateTimeFormat('en-CA',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
+  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Lima',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+  const v=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  return `${v.year}-${v.month}-${v.day}`;
 }
 function sumarDias(iso,n){
   const d=new Date(iso+'T12:00:00Z');
@@ -21,6 +23,7 @@ export default function Agenda(){
   const [turnos,setTurnos]=useState([]);
   const [error,setError]=useState('');
   const [cargando,setCargando]=useState(false);
+  const [reintentos,setReintentos]=useState(0);
   const semana=useMemo(()=>Array.from({length:7},(_,i)=>sumarDias(fecha,i)),[fecha]);
   useEffect(()=>{
     let activo=true;
@@ -39,7 +42,7 @@ export default function Agenda(){
       .catch(e=>{if(activo)setError(e.message);})
       .finally(()=>{if(activo)setCargando(false);});
     return()=>{activo=false;};
-  },[fecha,vetId]);
+  },[fecha,vetId,reintentos]);
   const limite=sumarDias(hoy,30);
   function elegirTurno(hora){
     sessionStorage.setItem('vet-agenda-seleccion',JSON.stringify({fecha,hora,veterinarioId:vetId}));
@@ -69,7 +72,7 @@ export default function Agenda(){
       <div className="agenda-week" aria-label="Elige fecha">
         {semana.filter(d=>d<=limite).map(d=><button key={d} type="button" onClick={()=>setFecha(d)} className={`agenda-day ${fecha===d?'selected':''}`}>{fechaCorta(d)}</button>)}
       </div>
-      {error&&<div className="alert alert-warning" role="alert">{error}<button className="btn btn-sm btn-outline-dark ms-2" onClick={()=>setFecha(x=>x)} type="button"><RefreshCcw size={13}/> Intentar de nuevo</button></div>}
+      {error&&<div className="alert alert-warning" role="alert">{error}<button className="btn btn-sm btn-outline-dark ms-2" onClick={()=>setReintentos(x=>x+1)} type="button"><RefreshCcw size={13}/> Intentar de nuevo</button></div>}
       {cargando&&<p role="status" className="text-muted">Consultando horarios disponibles…</p>}
       {!cargando&&!error&&<section aria-label="Turnos disponibles">
         <h3 className="h6 mb-3"><Clock3 size={18}/> Horarios para el {fechaCorta(fecha)}</h3>
