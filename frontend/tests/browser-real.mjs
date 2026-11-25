@@ -1,4 +1,5 @@
 import {chromium} from 'playwright';
+import {mkdir,writeFile} from 'node:fs/promises';
 const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
 const mockAPI=`
 export const api={
@@ -15,36 +16,62 @@ export const api={
   disponibilidad:async()=>({turnos:[{hora:'09:00',fechaHora:'2026-11-25T14:00:00Z',disponible:true}]})
 };
 `;
+const salidas=[];
+await mkdir('../evidencias-visuales-ci',{recursive:true});
 let failed=0;
+const tamanos=[
+ {nombre:'escritorio',width:1366,height:768},
+ {nombre:'tableta',width:768,height:1024},
+ {nombre:'movil',width:390,height:844},
+ {nombre:'compacto',width:870,height:310}
+];
+
 for(const screen of ['productos','administracion','agenda']){
- const page=await browser.newPage({viewport:{width:960,height:720}});
- const errors=[];
- page.on('pageerror',e=>errors.push('PAGE: '+e.stack));
- page.on('console',msg=>{if(msg.type()==='error')errors.push('CONSOLE: '+msg.text());});
- await page.route('**/src/api.js*',route=>route.fulfill({status:200,contentType:'application/javascript',body:mockAPI}));
- await page.goto('http://127.0.0.1:4173/browser-fixture.html#'+screen,{waitUntil:'networkidle'});
- await page.waitForTimeout(1100);
- const body=(await page.locator('body').innerText()).slice(0,370);
- const looksBroken=()=>page.locator('text=No se pudo abrir esta sección').count();
- try {
+ for(const tamano of tamanos){
+  const page=await browser.newPage({viewport:{width:tamano.width,height:tamano.height}});
+  const errors=[];
+  page.on('pageerror',e=>errors.push('PAGE: '+e.stack));
+  page.on('console',msg=>{if(msg.type()==='error')errors.push('CONSOLE: '+msg.text());});
+  await page.route('**/src/api.js*',route=>route.fulfill({status:200,contentType:'application/javascript',body:mockAPI}));
+  await page.goto('http://127.0.0.1:4173/browser-fixture.html#'+screen,{waitUntil:'networkidle'});
+  await page.waitForTimeout(250);
+  let interaction='';
+  try{
    if(screen==='productos'){
-     await page.getByRole('button',{name:'Alimentos',exact:true}).click();
-     await page.getByRole('searchbox',{name:'Buscar productos'}).fill('cepillo');
-     await page.waitForTimeout(450);
-   } else if(screen==='administracion'){
-     for(const tab of ['Agenda diaria','Catálogo','Profesionales','Rendimiento','Resumen']){
-       await page.getByRole('button',{name:tab,exact:true}).click();
-       await page.waitForTimeout(120);
-     }
-   } else if(screen==='agenda'){
-     await page.getByRole('button',{name:'Semana siguiente'}).click();
-     await page.waitForTimeout(250);
+    await page.getByRole('button',{name:'Alimentos',exact:true}).click();
+    await page.getByRole('searchbox',{name:'Buscar productos'}).fill('cepillo');
+    await page.waitForTimeout(410);
+    interaction='filtrado de catálogo';
+   }else if(screen==='administracion'){
+    for(const tab of ['Agenda diaria','Catálogo','Profesionales','Rendimiento','Resumen']){
+     await page.getByRole('button',{name:tab,exact:true}).click();
+    }
+    interaction='cinco pestañas del personal';
+   }else{
+    await page.getByRole('button',{name:'Semana siguiente'}).click();
+    interaction='navegación semanal';
    }
- } catch(e){errors.push('INTERACTION: '+e.stack);}
- const broke=body.includes('No se pudo abrir esta sección')||errors.length>0||body.trim().length<30||await looksBroken()>0;
- console.log(JSON.stringify({screen,body,errorCount:errors.length,errors:errors.slice(0,3),broke}));
- if(broke)failed++;
- await page.close();
+  }catch(error){errors.push('INTERACTION: '+error.stack);}
+  const body=(await page.locator('body').innerText()).slice(0,300);
+  const errorVisible=await page.getByText('No se pudo abrir esta sección').count();
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth+3);
+  const broke=errorVisible>0||errors.length>0||body.trim().length<30||overflow;
+  const archivo=screen+'-'+tamano.nombre+'-'+tamano.width+'x'+tamano.height+'.png';
+  await page.screenshot({path:'../evidencias-visuales-ci/'+archivo,fullPage:true});
+  salidas.push({
+   seccion:screen,dispositivo:tamano.nombre,resolucion:tamano.width+'x'+tamano.height,
+   interaccion:interaction,archivo,aprobado:!broke,
+   desbordeHorizontal:overflow,errores:errors.slice(0,3),
+   nota:'Interfaz con datos simulados para prueba visual automatizada. No demuestra persistencia real.'
+  });
+  console.log(JSON.stringify(salidas[salidas.length-1]));
+  if(broke)failed++;
+  await page.close();
+ }
 }
+await writeFile('../evidencias-visuales-ci/resultado-pruebas.json',JSON.stringify({
+ titulo:'Evidencias visuales automáticas con datos simulados',
+ fecha:new Date().toISOString(),total:salidas.length,aprobadas:salidas.filter(x=>x.aprobado).length,casos:salidas
+},null,2));
 await browser.close();
 if(failed)process.exitCode=1;

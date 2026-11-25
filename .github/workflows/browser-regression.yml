@@ -32,3 +32,10 @@ jobs:
           trap 'kill $VITE_PID || true; tail -35 /tmp/vite-browser.log' EXIT
           for i in {1..35}; do curl -fsS http://127.0.0.1:4173/browser-fixture.html >/dev/null && break; sleep 1; done
           node tests/browser-real.mjs
+      - name: Guardar capturas de escritorio, tableta, móvil y ventana compacta
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidencias-visuales-simuladas
+          path: evidencias-visuales-ci/
+          retention-days: 30
