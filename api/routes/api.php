@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AdminVeterinarioController;
 use App\Http\Controllers\Api\CitaController;
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\AdminDiagnosticoController;
 use App\Http\Controllers\Api\FotoCitaController;
 use App\Http\Controllers\Api\FotoProductoController;
 use App\Http\Controllers\Api\DisponibilidadController;
@@ -35,6 +36,7 @@ Route::middleware(['firebase', 'throttle:60,1'])->group(function () {
 
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/resumen', [AdminDashboardController::class, 'resumen']);
+        Route::get('/diagnostico', [AdminDiagnosticoController::class, 'index'])->middleware('throttle:10,1');
         Route::get('/agenda', [AdminDashboardController::class, 'agenda']);
         Route::get('/citas/{id}/foto', [FotoCitaController::class, 'showAdmin']);
         Route::get('/productos', [ProductoController::class, 'adminIndex']);
