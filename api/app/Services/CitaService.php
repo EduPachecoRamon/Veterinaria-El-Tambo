@@ -147,8 +147,13 @@ class CitaService
         );
 
         $turnoValido = false;
+        $turnoEncontrado = false;
 
         foreach ($disponibilidad['turnos'] as $turno) {
+            if (CarbonImmutable::parse($turno['fechaHora'])->utc()->equalTo($fecha)) {
+                $turnoEncontrado = true;
+            }
+
             if (
                 CarbonImmutable::parse($turno['fechaHora'])->utc()->equalTo($fecha) &&
                 (
@@ -170,6 +175,10 @@ class CitaService
                 $turnoValido = true;
                 break;
             }
+        }
+
+        if (!$turnoValido && $turnoEncontrado) {
+            throw new ConflictHttpException('Este veterinario ya tiene una reserva confirmada para ese turno.');
         }
 
         if (!$turnoValido) {
