@@ -41,6 +41,9 @@ export default function Administracion({rol}){
   const [mensaje,setMensaje]=useState('');
   const [ocupado,setOcupado]=useState(false);
   const [metricas,setMetricas]=useState([]);
+  const [diagnostico,setDiagnostico]=useState(null);
+  const [errorDiagnostico,setErrorDiagnostico]=useState('');
+  const [consultandoDiagnostico,setConsultandoDiagnostico]=useState(false);
 
   const cargar=useCallback(async()=>{
     if(rol!=='administrador')return;
@@ -72,6 +75,23 @@ export default function Administracion({rol}){
 
   useEffect(()=>{cargar();},[cargar]);
   useEffect(()=>{cargarAgenda(fecha);},[fecha,cargarAgenda]);
+  const cargarDiagnostico=useCallback(async()=>{
+    if(rol!=='administrador')return;
+    setConsultandoDiagnostico(true);
+    setErrorDiagnostico('');
+    try{
+      const data=await api.adminDiagnostico();
+      setDiagnostico(data);
+    }catch(error){
+      setErrorDiagnostico(error.message||'No se pudo consultar el diagnóstico.');
+      setDiagnostico(null);
+    }finally{setConsultandoDiagnostico(false);}
+  },[rol]);
+
+  useEffect(()=>{
+    if(seccion==='diagnostico')cargarDiagnostico();
+  },[seccion,cargarDiagnostico]);
+
 
   async function ejecutar(accion,exito){
     setOcupado(true);setError('');setMensaje('');
@@ -265,7 +285,39 @@ export default function Administracion({rol}){
 
     {seccion==='diagnostico'&&<section className="panel staff-panel">
       <div className="d-flex align-items-center gap-2 mb-2"><Activity size={20}/><h2 className="h5 mb-0">Diagnóstico de consultas · Unidad 3</h2></div>
-      <p className="text-muted">Mediciones del navegador, incluyendo red y procesamiento. Estas métricas no sustituyen la comparación de ejecución de MongoDB.</p>
+      <p className="text-muted">Estado de conexión, índices y tiempos observados. El diagnóstico está protegido por Firebase y el rol de administrador.</p>
+      <div className="quality-panel" aria-live="polite">
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+          <div>
+            <h3 className="h6 mb-1">Estado real de MongoDB Atlas</h3>
+            <p className="text-muted small mb-0">Verificación de índices de consulta desde Laravel. No muestra datos personales ni claves.</p>
+          </div>
+          <button type="button" className="btn btn-outline-vet btn-sm" disabled={consultandoDiagnostico} onClick={cargarDiagnostico}>
+            <RefreshCcw size={15}/> {consultandoDiagnostico?'Comprobando…':'Volver a comprobar'}
+          </button>
+        </div>
+        {errorDiagnostico&&<p className="alert alert-warning" role="alert">{errorDiagnostico}</p>}
+        {!diagnostico&&!errorDiagnostico&&<p role="status" className="text-muted">Consultando el diagnóstico del servidor…</p>}
+        {diagnostico&&<>
+          <div className="quality-stats">
+            <div><span className="quality-label">Conexión Atlas</span><strong className={diagnostico.disponible?'quality-good':'quality-warning'}>{diagnostico.conexion?.estado||'Sin verificar'}</strong></div>
+            <div><span className="quality-label">Índices encontrados</span><strong>{diagnostico.resumenIndices?.presentes??0} / {diagnostico.resumenIndices?.esperados??0}</strong></div>
+            <div><span className="quality-label">Tiempo de ping</span><strong>{typeof diagnostico.conexion?.latenciaMs==='number'?diagnostico.conexion.latenciaMs+' ms':'Sin dato'}</strong></div>
+          </div>
+          {!diagnostico.disponible&&<p className="alert alert-warning mt-3 mb-0">{diagnostico.mensaje||'Conexión no comprobada.'}</p>}
+          {!!diagnostico.indices?.length&&<div className="quality-index-list">
+            {diagnostico.indices.map(coleccion=><div className="quality-index-group" key={coleccion.nombre}>
+              <h4>{coleccion.nombre}</h4>
+              <div className="quality-index-items">{(coleccion.indices||[]).map(indice=><span key={indice.nombre} className={indice.presente?'quality-index-ok':'quality-index-missing'}>
+                {indice.presente?'✓':'!'} {indice.nombre}
+              </span>)}</div>
+            </div>)}
+          </div>}
+          <p className="small text-muted mt-3 mb-0">Comprobación: {diagnostico.verificadoEn?new Date(diagnostico.verificadoEn).toLocaleString('es-PE'): 'sin fecha'}. El ping no es un benchmark ni prueba que la API sea rápida.</p>
+        </>}
+      </div>
+      <h3 className="h6 mt-4">Consultas medidas desde este navegador</h3>
+      <p className="text-muted small">Los tiempos siguientes incluyen red y renderizado. Para rendimiento de consultas MongoDB utiliza la comparación documentada de COLLSCAN e IXSCAN.</p>
       {metricas.length?<div className="table-responsive"><table className="table table-striped align-middle">
         <thead><tr><th>Operación</th><th>Duración</th><th>Resultado</th><th>Hora</th></tr></thead>
         <tbody>{metricas.map((m,i)=><tr key={i}><td>{m.tipo}</td><td>{m.ms} ms</td><td>{m.ok?'Correcto':'Error'}</td><td>{m.fecha}</td></tr>)}</tbody>

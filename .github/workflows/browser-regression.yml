@@ -2,7 +2,9 @@ name: Browser regression - real React rendering
 on:
   push:
     branches:
-      - fix/errores-runtime-y-agenda-final
+      - main
+      - mejoras/pruebas-seguridad-rendimiento-final-20261124
+  pull_request:
   workflow_dispatch:
 
 jobs:

@@ -7,6 +7,7 @@ export const api={
    {id:'p2',nombre:'Producto ejemplo B',categoria:'Alimentos',descripcion:'Ficha de prueba',precio:23.5,imagenUrl:null,disponible:true}
   ],total:2,lastPage:1}),
   adminResumen:async()=>({productos:2,productosPublicados:2,veterinarios:1,citasTotales:2,citasHoy:1,proximosSieteDias:1,porEstado:{confirmada:1,cancelada:1}}),
+  adminDiagnostico:async()=>({disponible:true,verificadoEn:'2026-11-24T15:00:00Z',conexion:{estado:'correcta',latenciaMs:15.5},resumenIndices:{presentes:5,esperados:5},indices:[{nombre:'citas',indices:[{nombre:'owner_fecha_id_asc',presente:true}]}]}),
   adminProductos:async()=>({data:[{id:'p1',nombre:'Producto ejemplo',categoria:'Alimentos',descripcion:'Información de demostración',precio:null,disponible:true,activo:true,imagenUrl:null}]}),
   adminVeterinarios:async()=>({data:[{id:'507f1f77bcf86cd799439011',nombre:'Veterinario prueba',especialidad:'General',activo:true,horarios:[]}]}),
   adminAgenda:async()=>({data:[]}),

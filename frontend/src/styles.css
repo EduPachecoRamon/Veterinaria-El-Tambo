@@ -300,3 +300,19 @@ h1,h2,h3,h4,.section-heading,.navbar-brand,.stats-number{font-family:'Outfit','D
 @media(max-width:991px){.booking-hero-v2{grid-template-columns:1fr}.booking-hero-overview{max-width:280px;padding:19px;align-self:auto}.verification-banner{align-items:flex-start;flex-wrap:wrap}.verification-actions{width:100%;padding-left:62px}}
 @media(max-width:600px){.booking-hero-v2{padding:26px 21px;border-radius:20px;gap:20px}.booking-hero-overview{max-width:none;grid-template-columns:1fr auto;align-items:center;gap:7px}.booking-hero-overview>strong{font-size:2.6rem;grid-column:2;grid-row:1 / span 2;margin:0}.booking-overview-foot{grid-column:1 / -1}.verification-banner{padding:16px;gap:10px}.verification-icon{width:37px;height:37px}.verification-actions{padding-left:0}.verification-actions .btn{flex:1}.booking-panel-heading h2{font-size:1.2rem}.booking-panel{padding:18px}}
 @media(prefers-reduced-motion:reduce){.booking-hero-glow{animation:none}}
+
+.quality-panel{background:linear-gradient(130deg,#f7fcfd,#f4f9fb);border:1px solid #d9e9ec;border-radius:18px;padding:20px}
+.quality-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.quality-stats>div{display:flex;flex-direction:column;gap:7px;border:1px solid #e0ebef;background:#fff;border-radius:13px;padding:15px;min-width:0}
+.quality-label{font-size:.78rem;color:#64748b;font-weight:600}
+.quality-stats strong{font:800 1.35rem 'Outfit','DM Sans',sans-serif;color:#0f4053;overflow-wrap:anywhere}
+.quality-stats strong.quality-good{color:#047857}
+.quality-stats strong.quality-warning{color:#b45309}
+.quality-index-list{display:grid;gap:12px;margin-top:20px}
+.quality-index-group{background:#fff;border:1px solid #e0ebef;border-radius:12px;padding:14px}
+.quality-index-group h4{font-size:.9rem;font-weight:800;margin:0 0 10px;color:#174b62}
+.quality-index-items{display:flex;gap:7px;flex-wrap:wrap}
+.quality-index-items span{font-size:.76rem;font-weight:700;padding:6px 10px;border-radius:9px;overflow-wrap:anywhere}
+.quality-index-ok{color:#047857;background:#dcfce7}
+.quality-index-missing{color:#92400e;background:#fef3c7}
+@media(max-width:700px){.quality-stats{grid-template-columns:1fr}.quality-panel{padding:15px}}
