@@ -76,6 +76,7 @@ export const api = {
   disponibilidad: (id, fecha) => request(`/veterinarios/${encodeURIComponent(id)}/disponibilidad?fecha=${encodeURIComponent(fecha)}`),
   estadisticas: () => request('/estadisticas'),
   adminResumen: () => request('/admin/resumen'),
+  adminDiagnostico: () => request('/admin/diagnostico'),
   adminAgenda: fecha => request(`/admin/agenda?fecha=${encodeURIComponent(fecha)}`),
   subirFoto: (id,file) => solicitudArchivo(`/citas/${encodeURIComponent(id)}/foto`,{method:'POST',file}),
   verFoto: id => solicitudArchivo(`/citas/${encodeURIComponent(id)}/foto`),
